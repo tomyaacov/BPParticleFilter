@@ -8,38 +8,50 @@ import org.mozilla.javascript.Scriptable;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 public class BPParticleFilter {
 
     public static void main(String[] args) throws InterruptedException {
 
-        PrintWriter pw = null;
-        try {
-            pw = new PrintWriter(new File("NewData.csv"));
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        }
-        StringBuilder builder = new StringBuilder();
+        Date date = new Date();
+        String strDateFormat = "dd_MM_yy";
+        DateFormat dateFormat = new SimpleDateFormat(strDateFormat);
+        String formattedDate= dateFormat.format(date);
+        String folderName = System.getProperty("user.dir") + File.separator + "data_" + formattedDate;
+        new File(folderName).mkdir();
 
-        BProgramState bProgramState = new BProgramState();
-        // This will load the program file  <Project>/src/main/resources/test.js
-        final SingleResourceBProgram bprog = new SingleResourceBProgram("example1.js"){
-            protected void setupProgramScope(Scriptable scope) {
-                putInGlobalScope("bProgramState", bProgramState);// enables getting robots status
-                super.setupProgramScope(scope);
+        for (int i=0; i<100; i++){
+            PrintWriter pw = null;
+            try {
+                pw = new PrintWriter(new File(folderName + File.separator + "id_" + String.valueOf(i) + ".csv"));
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
             }
-        };
-        // bprog.setDaemonMode(true);
-        BProgramRunner rnr = new BProgramRunner(bprog);
+            StringBuilder builder = new StringBuilder();
 
-        // Print program events to the console
-        rnr.addListener( new PrintBProgramRunnerListener() );
-        rnr.addListener(new ParticleFilterEventListener(bProgramState, builder));
+            BProgramState bProgramState = new BProgramState();
+            // This will load the program file  <Project>/src/main/resources/example1.js
+            final SingleResourceBProgram bprog = new SingleResourceBProgram("example1.js"){
+                protected void setupProgramScope(Scriptable scope) {
+                    putInGlobalScope("bProgramState", bProgramState);// enables getting robots status
+                    super.setupProgramScope(scope);
+                }
+            };
+            // bprog.setDaemonMode(true);
+            BProgramRunner rnr = new BProgramRunner(bprog);
 
-        // go!
-        rnr.run();
+            // Print program events to the console
+            rnr.addListener( new PrintBProgramRunnerListener() );
+            rnr.addListener(new ParticleFilterEventListener(bProgramState, builder));
 
-        pw.write(builder.toString());
-        pw.close();
+            // go!
+            rnr.run();
+
+            pw.write(builder.toString());
+            pw.close();
+        }
     }
 }
