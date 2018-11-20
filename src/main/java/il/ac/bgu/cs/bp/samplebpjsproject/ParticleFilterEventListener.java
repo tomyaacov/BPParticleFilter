@@ -16,7 +16,7 @@ public class ParticleFilterEventListener implements BProgramRunnerListener {
     public ParticleFilterEventListener(BProgramState bProgramState, StringBuilder builder) {
         this.bProgramState = bProgramState;
         this.builder = builder;
-        builder.append("Event");
+        builder.append("Event,");
     }
 
 
@@ -47,7 +47,7 @@ public class ParticleFilterEventListener implements BProgramRunnerListener {
 
     @Override
     public void bthreadAdded(BProgram bProgram, BThreadSyncSnapshot bThreadSyncSnapshot) {
-        builder.append("," + bThreadSyncSnapshot.getName());
+        builder.append(bThreadSyncSnapshot.getName());
         bProgramState.addBThread(bThreadSyncSnapshot.getName());
     }
 

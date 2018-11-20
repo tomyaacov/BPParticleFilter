@@ -1,69 +1,66 @@
 importPackage(java.util);
 
 bp.registerBThread( "Main", function(){
-    while (true){
-        bProgramState.updateState("Main", "1");
-        bp.sync( {request:[bp.Event("Hot"), bp.Event("Cold")]} );
+    var i;
+    for (i = 0; i < 1000; i++) {
+        bProgramState.updateState("Main", "Good");
+        bp.sync( {request:[bp.Event("Hot"), bp.Event("Cold"), bp.Event("Normal")]} );
     }
 } );
 
-bp.registerBThread( "Fault1", function(){
+bp.registerBThread( "FaultTypeA", function(){
     rand1 = new Random();
     while (true) {
         if (rand1.nextDouble() < 0.02) {
-            bProgramState.updateState("Fault1", "2");
-            bp.sync({waitFor: bp.all, block: bp.Event("Hot")});
-            bProgramState.updateState("Fault1", "3");
-            bp.sync({waitFor: bp.all});
-            bProgramState.updateState("Fault1", "4");
-            bp.sync({waitFor: bp.all, block: bp.Event("Hot")});
-            bProgramState.updateState("Fault1", "5");
-            bp.sync({waitFor: bp.all});
-            bProgramState.updateState("Fault1", "6");
-            bp.sync({waitFor: bp.all, block: bp.Event("Hot")});
-            bProgramState.updateState("Fault1", "7");
-            bp.sync({waitFor: bp.all});
-            bProgramState.updateState("Fault1", "8");
-            bp.sync({waitFor: bp.all, block: bp.Event("Hot")});
-            bProgramState.updateState("Fault1", "9");
-            bp.sync({waitFor: bp.all});
-            bProgramState.updateState("Fault1", "10");
-            bp.sync({waitFor: bp.all, block: bp.Event("Hot")});
-            bProgramState.updateState("Fault1", "11");
-            bp.sync({waitFor: bp.all});
+            bProgramState.updateState("FaultTypeA", "Fault1");
+            if (rand1.nextDouble() < 0.8){
+                bp.sync({waitFor: bp.all, block: bp.Event("Hot")});
+            } else {
+                bp.sync({waitFor: bp.all});
+            }
+            bProgramState.updateState("FaultTypeA", "Fault2");
+            if (rand1.nextDouble() < 0.8){
+                bp.sync({waitFor: bp.all, block: bp.Event("Hot")});
+            } else {
+                bp.sync({waitFor: bp.all});
+            }
+            bProgramState.updateState("FaultTypeA", "Fault3");
+            if (rand1.nextDouble() < 0.8){
+                bp.sync({waitFor: bp.all, block: bp.Event("Hot")});
+            } else {
+                bp.sync({waitFor: bp.all});
+            }
         } else {
-            bProgramState.updateState("Fault1", "1");
+            bProgramState.updateState("FaultTypeA", "Good");
             bp.sync({waitFor: bp.all});
         }
     }
 } );
 
-bp.registerBThread( "Fault2", function(){
+bp.registerBThread( "FaultTypeB", function(){
     rand2 = new Random();
     while (true){
         if (rand2.nextDouble() < 0.02) {
-            bProgramState.updateState("Fault2", "2");
-            bp.sync({waitFor: bp.all, block: bp.Event("Cold")});
-            bProgramState.updateState("Fault2", "3");
-            bp.sync({waitFor: bp.all});
-            bProgramState.updateState("Fault2", "4");
-            bp.sync({waitFor: bp.all, block: bp.Event("Cold")});
-            bProgramState.updateState("Fault2", "5");
-            bp.sync({waitFor: bp.all});
-            bProgramState.updateState("Fault2", "6");
-            bp.sync({waitFor: bp.all, block: bp.Event("Cold")});
-            bProgramState.updateState("Fault2", "7");
-            bp.sync({waitFor: bp.all});
-            bProgramState.updateState("Fault2", "8");
-            bp.sync({waitFor: bp.all, block: bp.Event("Cold")});
-            bProgramState.updateState("Fault2", "9");
-            bp.sync({waitFor: bp.all});
-            bProgramState.updateState("Fault2", "10");
-            bp.sync({waitFor: bp.all, block: bp.Event("Cold")});
-            bProgramState.updateState("Fault2", "11");
-            bp.sync({waitFor: bp.all});
+            bProgramState.updateState("FaultTypeB", "Fault1");
+            if (rand1.nextDouble() < 0.9){
+                bp.sync({waitFor: bp.all, block: bp.Event("Cold")});
+            } else {
+                bp.sync({waitFor: bp.all});
+            }
+            bProgramState.updateState("FaultTypeB", "Fault2");
+            if (rand1.nextDouble() < 0.9){
+                bp.sync({waitFor: bp.all, block: bp.Event("Cold")});
+            } else {
+                bp.sync({waitFor: bp.all});
+            }
+            bProgramState.updateState("FaultTypeB", "Fault3");
+            if (rand1.nextDouble() < 0.9){
+                bp.sync({waitFor: bp.all, block: bp.Event("Cold")});
+            } else {
+                bp.sync({waitFor: bp.all});
+            }
         } else {
-            bProgramState.updateState("Fault2", "1");
+            bProgramState.updateState("FaultTypeB", "Good");
             bp.sync({waitFor: bp.all});
         }
     }

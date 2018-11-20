@@ -26,9 +26,9 @@ public class BProgramState {
     public String getStatesString(){
         String states = "";
         for(String name : bThreadsOrder){
-            states = states + "," + currentState.get(name);
+            states = states + currentState.get(name);
         }
-        return states + "\n";
+        return "," + states + "\n";
     }
 
 }
