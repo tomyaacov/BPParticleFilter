@@ -23,7 +23,7 @@ public class BPParticleFilter {
         String folderName = System.getProperty("user.dir") + File.separator + "data_" + formattedDate;
         new File(folderName).mkdir();
 
-        for (int i=0; i<1000; i++){
+        for (int i=0; i<1; i++){
             PrintWriter pw = null;
             try {
                 pw = new PrintWriter(new File(folderName + File.separator + "id_" + String.valueOf(i) + ".csv"));
