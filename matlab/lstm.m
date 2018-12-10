@@ -21,7 +21,7 @@ for j = 1:length(XTrain)
 end
 
 YTest_enc = YTest;
-for j = 1:length(XTrain)
+for j = 1:length(XTest)
         YTest_enc{j} = categorical(state_names(YTest_enc{j}));
 end
 
