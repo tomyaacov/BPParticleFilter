@@ -3,9 +3,7 @@ package il.ac.bgu.cs.bp.samplebpjsproject;
 import il.ac.bgu.cs.bp.bpjs.bprogramio.BProgramSyncSnapshotCloner;
 import il.ac.bgu.cs.bp.bpjs.internal.ExecutorServiceMaker;
 import il.ac.bgu.cs.bp.bpjs.model.BEvent;
-import il.ac.bgu.cs.bp.bpjs.model.BProgram;
 import il.ac.bgu.cs.bp.bpjs.model.BProgramSyncSnapshot;
-import il.ac.bgu.cs.bp.bpjs.model.SingleResourceBProgram;
 import io.jenetics.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -35,7 +33,7 @@ public class BProgramSyncSnapshotTransitionOperator extends Mutator<AnyGene<BPro
     private BProgramSyncSnapshot getNextBProgramSyncSnapshot(BProgramSyncSnapshot bProgramSyncSnapshot) {
         BProgramSyncSnapshot newBProgramSyncSnapshot = BProgramSyncSnapshotCloner.clone(bProgramSyncSnapshot);
         for(int j = 0; j < BPFilter.getEvolutionResolution(); j++){
-            Set<BEvent> possibleEvents = BPFilter.getBProgram().getEventSelectionStrategy().selectableEvents(newBProgramSyncSnapshot.getStatements(), newBProgramSyncSnapshot.getExternalEvents());
+            Set<BEvent> possibleEvents = BPFilter.getBProgram().getEventSelectionStrategy().selectableEvents(newBProgramSyncSnapshot);
             if(possibleEvents.contains(BPFilter.getEventList().get(BPFilter.getProgramStepCounter()+j))){
                 try {
                     newBProgramSyncSnapshot = newBProgramSyncSnapshot.triggerEvent(

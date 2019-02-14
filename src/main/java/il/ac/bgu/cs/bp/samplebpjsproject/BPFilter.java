@@ -7,7 +7,8 @@ import il.ac.bgu.cs.bp.bpjs.internal.ExecutorServiceMaker;
 import il.ac.bgu.cs.bp.bpjs.model.BEvent;
 import il.ac.bgu.cs.bp.bpjs.model.BProgram;
 import il.ac.bgu.cs.bp.bpjs.model.BProgramSyncSnapshot;
-import il.ac.bgu.cs.bp.bpjs.model.SingleResourceBProgram;
+
+import il.ac.bgu.cs.bp.bpjs.model.ResourceBProgram;
 import il.ac.bgu.cs.bp.bpjs.model.eventselection.EventSelectionResult;
 import io.jenetics.*;
 import io.jenetics.engine.Codec;
@@ -15,10 +16,12 @@ import io.jenetics.engine.Engine;
 import io.jenetics.engine.EvolutionResult;
 import io.jenetics.engine.EvolutionStatistics;
 import io.jenetics.stat.DoubleMomentStatistics;
+import io.jenetics.stat.MinMax;
 import lombok.Getter;
 import lombok.Setter;
 
 import java.util.*;
+import java.util.stream.Collector;
 
 public class BPFilter {
 
@@ -55,7 +58,7 @@ public class BPFilter {
     }
 
     public void runBprogram(){
-        BProgram externalBProgram = new SingleResourceBProgram(aResourceName);
+        BProgram externalBProgram = new ResourceBProgram(aResourceName);
         this.bProgramRunner = new BProgramRunner(externalBProgram);
         bProgramRunner.addListener(new PrintBProgramRunnerListener());
         ParticleFilterEventListener particleFilterEventListener = new ParticleFilterEventListener();
@@ -63,11 +66,11 @@ public class BPFilter {
         bProgramRunner.run();
         eventList = particleFilterEventListener.eventList;
         //System.out.println(eventList);
-        bProgram = new SingleResourceBProgram(aResourceName);
+        bProgram = new ResourceBProgram(aResourceName);
     }
 
     private static BProgramSyncSnapshot newInstance (){
-        BProgram bProgram = new SingleResourceBProgram(aResourceName);
+        BProgram bProgram = new ResourceBProgram(aResourceName);
         BProgramSyncSnapshot initBProgramSyncSnapshot = bProgram.setup();
         try {
             BProgramSyncSnapshot bProgramSyncSnapshot = initBProgramSyncSnapshot.start(ExecutorServiceMaker.makeWithName("BProgramRunner-" + 0));// TODO: instance number should maybe be different
@@ -84,8 +87,8 @@ public class BPFilter {
         for(int i = 0; i < fitnessNumOfIterations; i++){
             cur = BProgramSyncSnapshotCloner.clone(bProgramSyncSnapshot);
             for(int j = 0; j < evolutionResolution; j++){
-                Set<BEvent> possibleEvents = bProgram.getEventSelectionStrategy().selectableEvents(cur.getStatements(), cur.getExternalEvents());
-                Optional<EventSelectionResult> res = bProgram.getEventSelectionStrategy().select(cur.getStatements(), cur.getExternalEvents(), possibleEvents);
+                Set<BEvent> possibleEvents = bProgram.getEventSelectionStrategy().selectableEvents(cur);
+                Optional<EventSelectionResult> res = bProgram.getEventSelectionStrategy().select(cur, possibleEvents);
                 if (res.isPresent()) {
                     EventSelectionResult esr = (EventSelectionResult)res.get();
                     if(esr.getEvent().getName().equals(getEventList().get(getProgramStepCounter()+j).getName())){
@@ -112,9 +115,10 @@ public class BPFilter {
     }
 
     public static void main(final String[] args) throws InterruptedException {
-        aResourceName = "example1.js";
+            aResourceName = "example1.js";
         int populationSize = 5;
         double mutationProbability = 0.1;
+        int systemSeqeunceLength = 10;
         evolutionResolution = 5;
         fitnessNumOfIterations = 10;
 
@@ -133,17 +137,23 @@ public class BPFilter {
                 .offspringSelector(new RouletteWheelSelector<>())
                 .alterers(new BProgramSyncSnapshotTransitionOperator(bpFilter),
                         new BProgramSyncSnapshotMutation(0.1, bpFilter))
+                .maximizing()
                 .build();
 
         EvolutionStatistics<Double, DoubleMomentStatistics> statistics = EvolutionStatistics.ofNumber();
+        final MinMax<EvolutionResult<AnyGene<BProgramSyncSnapshot>, Double>> best = MinMax.of();
 
-        final Phenotype<AnyGene<BProgramSyncSnapshot>, Double> best =
-                engine.stream()
-                        .limit(2)
+        engine.stream()
+                        .limit(systemSeqeunceLength/evolutionResolution)
                         .peek(statistics)
-                        .collect(EvolutionResult.toBestPhenotype());
+                        .peek(best).forEach(evolutionResult -> {
+            StateEstimation.fittestIndividual(evolutionResult, null);
+            programStepCounter+=evolutionResolution;
+            System.out.println(programStepCounter);
+        });
 
-        System.out.println(best);
+
+        //System.out.println(result);
         System.out.println(statistics);
     }
 
