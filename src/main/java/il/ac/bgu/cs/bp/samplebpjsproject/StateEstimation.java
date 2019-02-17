@@ -6,7 +6,7 @@ import io.jenetics.engine.EvolutionResult;
 
 public class StateEstimation {
 
-    public static void fittestIndividual(EvolutionResult<AnyGene<BProgramSyncSnapshot>, Double> evolutionResult, BProgramSyncSnapshot realState){
-        System.out.println(evolutionResult.getBestPhenotype());
+    public static BProgramSyncSnapshot fittestIndividual(EvolutionResult<AnyGene<BProgramSyncSnapshot>, Double> evolutionResult){
+        return evolutionResult.getBestPhenotype().getGenotype().getGene().getAllele();
     }
 }

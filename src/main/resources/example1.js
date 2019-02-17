@@ -1,7 +1,7 @@
 
 bp.registerBThread( "Main", function(){
     var i;
-    for (i = 0; i < 10; i++) {
+    for (i = 0; i < 15; i++) {
         bp.sync( {request:[bp.Event("GPS1"), bp.Event("GPS2"), bp.Event("GPS3")]} );
     }
 } );

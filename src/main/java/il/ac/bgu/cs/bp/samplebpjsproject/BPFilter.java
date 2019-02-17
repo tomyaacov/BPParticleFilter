@@ -10,6 +10,8 @@ import il.ac.bgu.cs.bp.bpjs.model.BProgramSyncSnapshot;
 
 import il.ac.bgu.cs.bp.bpjs.model.ResourceBProgram;
 import il.ac.bgu.cs.bp.bpjs.model.eventselection.EventSelectionResult;
+import il.ac.bgu.cs.bp.bpjs.model.eventselection.EventSelectionStrategy;
+import il.ac.bgu.cs.bp.bpjs.model.eventselection.SimpleEventSelectionStrategy;
 import io.jenetics.*;
 import io.jenetics.engine.Codec;
 import io.jenetics.engine.Engine;
@@ -21,7 +23,6 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.util.*;
-import java.util.stream.Collector;
 
 public class BPFilter {
 
@@ -51,6 +52,12 @@ public class BPFilter {
     @Getter @Setter
     private static List<BEvent> eventList;
 
+    @Getter @Setter
+    private static List<BProgramSyncSnapshot> bpssList;
+
+    @Getter @Setter
+    private static List<BProgramSyncSnapshot> bpssEstimatedList = new LinkedList<>();
+
     public BPFilter(int populationSize, double mutationProbability) {
         this.populationSize = populationSize;
         this.mutationProbability = mutationProbability;
@@ -58,14 +65,16 @@ public class BPFilter {
     }
 
     public void runBprogram(){
-        BProgram externalBProgram = new ResourceBProgram(aResourceName);
+        SimpleEventSelectionStrategyFilter ess = new SimpleEventSelectionStrategyFilter(new SimpleEventSelectionStrategy());
+        BProgram externalBProgram = new ResourceBProgram(aResourceName, ess);
         this.bProgramRunner = new BProgramRunner(externalBProgram);
         bProgramRunner.addListener(new PrintBProgramRunnerListener());
         ParticleFilterEventListener particleFilterEventListener = new ParticleFilterEventListener();
         bProgramRunner.addListener(particleFilterEventListener);
         bProgramRunner.run();
         eventList = particleFilterEventListener.eventList;
-        //System.out.println(eventList);
+        bpssList = ess.bProgramSyncSnapshotList;
+        //System.out.println(bpssList);
         bProgram = new ResourceBProgram(aResourceName);
     }
 
@@ -115,11 +124,11 @@ public class BPFilter {
     }
 
     public static void main(final String[] args) throws InterruptedException {
-            aResourceName = "example1.js";
+        aResourceName = "example1.js";
         int populationSize = 5;
         double mutationProbability = 0.1;
-        int systemSeqeunceLength = 10;
-        evolutionResolution = 5;
+        int systemSeqeunceLength = 15;
+        evolutionResolution = 3;
         fitnessNumOfIterations = 10;
 
         BPFilter bpFilter = new BPFilter(populationSize, mutationProbability);
@@ -147,13 +156,11 @@ public class BPFilter {
                         .limit(systemSeqeunceLength/evolutionResolution)
                         .peek(statistics)
                         .peek(best).forEach(evolutionResult -> {
-            StateEstimation.fittestIndividual(evolutionResult, null);
+            bpssEstimatedList.add(StateEstimation.fittestIndividual(evolutionResult));
             programStepCounter+=evolutionResolution;
-            System.out.println(programStepCounter);
         });
-
-
-        //System.out.println(result);
+        System.out.println(bpssList);
+        System.out.println(bpssEstimatedList);
         System.out.println(statistics);
     }
 
