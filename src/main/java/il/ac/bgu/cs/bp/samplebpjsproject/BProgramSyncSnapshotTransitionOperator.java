@@ -11,6 +11,7 @@ import lombok.Setter;
 import java.util.ArrayList;
 import java.util.Random;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
 
 public class BProgramSyncSnapshotTransitionOperator extends Mutator<AnyGene<BProgramSyncSnapshot>, Double> {
 
@@ -31,20 +32,24 @@ public class BProgramSyncSnapshotTransitionOperator extends Mutator<AnyGene<BPro
     }
 
     private BProgramSyncSnapshot getNextBProgramSyncSnapshot(BProgramSyncSnapshot bProgramSyncSnapshot) {
+        //TODO: Is this the right approach if we dont have it in possible events
+        ExecutorService executorService = ExecutorServiceMaker.makeWithName("BProgramRunner-" + 0);
         BProgramSyncSnapshot newBProgramSyncSnapshot = BProgramSyncSnapshotCloner.clone(bProgramSyncSnapshot);
         for(int j = 0; j < BPFilter.getEvolutionResolution(); j++){
             Set<BEvent> possibleEvents = BPFilter.getBProgram().getEventSelectionStrategy().selectableEvents(newBProgramSyncSnapshot);
-            if(possibleEvents.contains(BPFilter.getEventList().get(BPFilter.getProgramStepCounter()+j))){
+            if(possibleEvents.contains(BPFilter.getEventList().get(BPFilter.getProgramStepCounter()-BPFilter.getEvolutionResolution()+j))){
                 try {
                     newBProgramSyncSnapshot = newBProgramSyncSnapshot.triggerEvent(
-                            BPFilter.getEventList().get(BPFilter.getProgramStepCounter()+j),
-                            ExecutorServiceMaker.makeWithName("BProgramRunner-" + 0),
+                            BPFilter.getEventList().get(BPFilter.getProgramStepCounter()-BPFilter.getEvolutionResolution()+j),
+                            executorService,
                             new ArrayList<>()); // dummy
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
             }
         }
+        executorService.shutdown();
+        //System.out.println("Transition");
         return newBProgramSyncSnapshot;
     }
 
