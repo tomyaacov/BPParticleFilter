@@ -35,12 +35,12 @@ public class BProgramSyncSnapshotTransitionOperator extends Mutator<AnyGene<BPro
         //TODO: Is this the right approach if we dont have it in possible events
         ExecutorService executorService = ExecutorServiceMaker.makeWithName("BProgramRunner-" + 0);
         BProgramSyncSnapshot newBProgramSyncSnapshot = BProgramSyncSnapshotCloner.clone(bProgramSyncSnapshot);
-        for(int j = 0; j < BPFilter.getEvolutionResolution(); j++){
-            Set<BEvent> possibleEvents = BPFilter.getBProgram().getEventSelectionStrategy().selectableEvents(newBProgramSyncSnapshot);
-            if(possibleEvents.contains(BPFilter.getEventList().get(BPFilter.getProgramStepCounter()-BPFilter.getEvolutionResolution()+j))){
+        for(int j = 0; j < BPFilter.evolutionResolution; j++){
+            Set<BEvent> possibleEvents = BPFilter.bProgram.getEventSelectionStrategy().selectableEvents(newBProgramSyncSnapshot);
+            if(possibleEvents.contains(BPFilter.eventList.get(BPFilter.programStepCounter-BPFilter.evolutionResolution+j))){
                 try {
                     newBProgramSyncSnapshot = newBProgramSyncSnapshot.triggerEvent(
-                            BPFilter.getEventList().get(BPFilter.getProgramStepCounter()-BPFilter.getEvolutionResolution()+j),
+                            BPFilter.eventList.get(BPFilter.programStepCounter-BPFilter.evolutionResolution+j),
                             executorService,
                             new ArrayList<>()); // dummy
                 } catch (InterruptedException e) {

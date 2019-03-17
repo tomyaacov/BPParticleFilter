@@ -11,7 +11,7 @@ public class RouletteWheelSelectorDecorator extends RouletteWheelSelector {
     @Override
     public ISeq<Phenotype> select(Seq population, int count, Optimize opt) {
         //System.out.println("Selector");
-        BPFilter.setProgramStepCounter(BPFilter.getProgramStepCounter()+BPFilter.getEvolutionResolution()); //TODO: temp!!!
+        BPFilter.programStepCounter = BPFilter.programStepCounter+BPFilter.evolutionResolution; //TODO: temp!!!
         return super.select(population, count, opt);
     }
 }

@@ -122,7 +122,7 @@ public class DrivingCarVisualization {
     }
 
     public static void main(final String[] args) throws InterruptedException {
-        String aResourceName = "driving_car.js";
+        String aResourceName = "driving_car_toy.js";
         SimpleEventSelectionStrategyFilter ess = new SimpleEventSelectionStrategyFilter(new SimpleEventSelectionStrategy());
         BProgram externalBProgram = new ResourceBProgram(aResourceName, ess);
         BProgramRunner bProgramRunner = new BProgramRunner(externalBProgram);

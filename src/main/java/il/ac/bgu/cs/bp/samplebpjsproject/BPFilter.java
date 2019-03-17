@@ -1,5 +1,7 @@
 package il.ac.bgu.cs.bp.samplebpjsproject;
 
+import il.ac.bgu.cs.bp.bpjs.analysis.DfsBProgramVerifier;
+import il.ac.bgu.cs.bp.bpjs.analysis.VerificationResult;
 import il.ac.bgu.cs.bp.bpjs.bprogramio.BProgramSyncSnapshotCloner;
 import il.ac.bgu.cs.bp.bpjs.execution.BProgramRunner;
 import il.ac.bgu.cs.bp.bpjs.execution.listeners.PrintBProgramRunnerListener;
@@ -10,7 +12,6 @@ import il.ac.bgu.cs.bp.bpjs.model.BProgramSyncSnapshot;
 
 import il.ac.bgu.cs.bp.bpjs.model.ResourceBProgram;
 import il.ac.bgu.cs.bp.bpjs.model.eventselection.EventSelectionResult;
-import il.ac.bgu.cs.bp.bpjs.model.eventselection.EventSelectionStrategy;
 import il.ac.bgu.cs.bp.bpjs.model.eventselection.SimpleEventSelectionStrategy;
 import io.jenetics.*;
 import io.jenetics.engine.Codec;
@@ -27,37 +28,31 @@ import java.util.concurrent.ExecutorService;
 
 public class BPFilter {
 
-    private static String aResourceName;
+    public static String aResourceName;
 
-    @Getter @Setter
-    private int populationSize;
+    public int populationSize;
 
-    @Getter @Setter
-    private double mutationProbability;
+    public double mutationProbability;
 
-    @Getter @Setter
-    private static int evolutionResolution;
+    public static int evolutionResolution;
 
-    @Getter @Setter
-    private static int fitnessNumOfIterations;
+    public static int fitnessNumOfIterations;
 
-    @Getter @Setter
-    private static int programStepCounter;
+    public static int programStepCounter;
 
-    @Getter @Setter
-    private static BProgram bProgram;
+    public static BProgram bProgram;
 
-    @Getter @Setter
-    private BProgramRunner bProgramRunner;
+    public static BProgramRunner bProgramRunner;
 
-    @Getter @Setter
-    private static List<BEvent> eventList;
+    public static List<BEvent> eventList;
 
-    @Getter @Setter
-    private static List<BProgramSyncSnapshot> bpssList;
+    public static List<BProgramSyncSnapshot> bpssList;
 
-    @Getter @Setter
-    private static List<BProgramSyncSnapshot> bpssEstimatedList = new LinkedList<>();
+    public static List<BProgramSyncSnapshot> bpssEstimatedList = new LinkedList<>();
+
+    public static BPFilterVisitedStateStore store;
+
+    public static BProgram externalBProgram;
 
     public BPFilter(int populationSize, double mutationProbability) {
         this.populationSize = populationSize;
@@ -65,28 +60,22 @@ public class BPFilter {
         programStepCounter = 0;
     }
 
-    public void runBprogram(){
+    public static void runBprogram(){
         SimpleEventSelectionStrategyFilter ess = new SimpleEventSelectionStrategyFilter(new SimpleEventSelectionStrategy());
-        BProgram externalBProgram = new ResourceBProgram(aResourceName, ess);
-        this.bProgramRunner = new BProgramRunner(externalBProgram);
-        bProgramRunner.addListener(new PrintBProgramRunnerListener());
+        externalBProgram = new ResourceBProgram(aResourceName, ess);
+        bProgramRunner = new BProgramRunner(externalBProgram);
+        //bProgramRunner.addListener(new PrintBProgramRunnerListener());
         ParticleFilterEventListener particleFilterEventListener = new ParticleFilterEventListener();
         bProgramRunner.addListener(particleFilterEventListener);
         externalBProgram.setWaitForExternalEvents(false);
         bProgramRunner.run();
         eventList = particleFilterEventListener.eventList;
         bpssList = ess.bProgramSyncSnapshotList;
-        List<List<String>> states = DrivingCarVisualization.getStatesVisualization(eventList);
-//        int generation = 3;
-//        double score = 0.87343;
-//        boolean match = false;
-//        System.out.println(DrivingCarVisualization.frameStatesAndData(frame, generation, score, match));
-        //System.out.println(bpssList);
-        //DrivingCarVisualization.printDemoRun(states, evolutionResolution);
+        //List<List<String>> states = DrivingCarVisualization.getStatesVisualization(eventList);
         bProgram = new ResourceBProgram(aResourceName);
     }
 
-    private static BProgramSyncSnapshot newInstance (){
+    public static BProgramSyncSnapshot newInstance (){
         BProgram bProgram = new ResourceBProgram(aResourceName);
         BProgramSyncSnapshot initBProgramSyncSnapshot = bProgram.setup();
         try {
@@ -111,7 +100,7 @@ public class BPFilter {
                 Optional<EventSelectionResult> res = bProgram.getEventSelectionStrategy().select(cur, possibleEvents);
                 if (res.isPresent()) {
                     EventSelectionResult esr = (EventSelectionResult)res.get();
-                    if(esr.getEvent().equals(getEventList().get(getProgramStepCounter()+j))){
+                    if(esr.getEvent().equals(eventList.get(programStepCounter+j))){
                         fitness.set(j,fitness.get(j)+1.0);
                     }
                     try {
@@ -136,57 +125,18 @@ public class BPFilter {
         return finalFitness;
     }
 
-    public static void main(final String[] args) throws InterruptedException {
-        aResourceName = "driving_car.js";
-        int populationSize = 3;
-        double mutationProbability = 0.1;
-        evolutionResolution = 3;
-        fitnessNumOfIterations = 10;
-
-        BPFilter bpFilter = new BPFilter(populationSize, mutationProbability);
-        bpFilter.runBprogram();
-
-
-        final Codec<BProgramSyncSnapshot, AnyGene<BProgramSyncSnapshot>>
-                CODEC = Codec.of(Genotype.of(AnyChromosome.of(BPFilter::newInstance)), gt -> gt.getGene().getAllele());
-
-        final Engine<AnyGene<BProgramSyncSnapshot>, Double> engine = Engine
-                .builder(BPFilter::fitness, CODEC)
-                .populationSize(populationSize)
-                .offspringFraction(1)
-                //.survivorsSelector(new TournamentSelector<>(5))
-                .offspringSelector(new RouletteWheelSelectorDecorator())
-                .alterers(new BProgramSyncSnapshotTransitionOperator(bpFilter),
-                        new BProgramSyncSnapshotMutation(0.1, bpFilter))
-                .maximizing()
-                .build();
-
-        EvolutionStatistics<Double, DoubleMomentStatistics> statistics = EvolutionStatistics.ofNumber();
-        final MinMax<EvolutionResult<AnyGene<BProgramSyncSnapshot>, Double>> best = MinMax.of();
-
-        engine.stream()
-                //.limit(r -> programStepCounter*evolutionResolution >= bpssList.size())
-                .limit(bpssList.size()/evolutionResolution-1) // -1 remove the state in the end of the b-thread
-                .peek(statistics)
-                .peek(best).forEach(evolutionResult -> {
-            bpssEstimatedList.add(StateEstimation.fittestIndividual(evolutionResult));
-            //programStepCounter+=evolutionResolution;
-        });
-        //System.out.println(bpssList.size());
-        //System.out.println(bpssEstimatedList);
-        System.out.println(statistics);
-
-        List<Boolean> estimationAccuracy = new ArrayList<>();
-        for (int i=0; i < bpssEstimatedList.size(); i++){
-            estimationAccuracy.add(bpssEstimatedList.get(i).equals(bpssList.get(evolutionResolution*(i+1))));
-        }
-        OptionalDouble average = estimationAccuracy
-                .stream()
-                .mapToDouble(a -> a ? 1 : 0)
-                .average();
-        System.out.println("Accuracy " + estimationAccuracy);
-        System.out.println("Total accuracy: " + (average.isPresent() ? average.getAsDouble() : 0));
-
+    public static void runOfflineModelChecking() throws Exception{
+        SimpleEventSelectionStrategy ess = new SimpleEventSelectionStrategy();
+        BProgram externalBProgram = new ResourceBProgram(aResourceName, ess);
+        externalBProgram.setWaitForExternalEvents(false);
+        DfsBProgramVerifier vrf = new DfsBProgramVerifier();
+        //vrf.setDebugMode(true);
+        vrf.setMaxTraceLength(15);
+        store = new BPFilterVisitedStateStore();
+        vrf.setVisitedNodeStore(store);
+        VerificationResult res = vrf.verify(externalBProgram);
     }
+
+
 
 }

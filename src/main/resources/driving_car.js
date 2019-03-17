@@ -1,117 +1,71 @@
-width = 9;
-//malfunctionProbability = 0.5;
 
-var car1EventSetReal = bp.EventSet('', function(e) {
-    return (e.data.id == 1) && (e.data.x > -1);
-});
-var car2EventSetReal = bp.EventSet('', function(e) {
-    return (e.data.id == 2) && (e.data.x > -1);
-});
-var car3EventSetReal = bp.EventSet('', function(e) {
-    return (e.data.id == 3) && (e.data.x > -1);
-});
-var car4EventSetReal = bp.EventSet('', function(e) {
-    return (e.data.id == 4) && (e.data.x > -1);
-});
-var car1EventSetAll = bp.EventSet('', function(e) {
-    return (e.data.id == 1);
-});
-var car2EventSetAll = bp.EventSet('', function(e) {
-    return (e.data.id == 2);
-});
-var car3EventSetAll = bp.EventSet('', function(e) {
-    return (e.data.id == 3);
-});
-var car4EventSetAll = bp.EventSet('', function(e) {
-    return (e.data.id == 4);
-});
+numOfLanes = 5;
+laneLength = 5;
+laneNumOfIterations = 5;
+malfunctionProbabilityMin = 0.01;
+malfunctionProbabilityMax = 0.2;
+var malfunctionProbability;
+malfunctionWindowMin = 2;
+malfunctionWindowMax = 10;
+var malfunctionWindow;
+var laneDirection;
+var failureType;
 
-bp.registerBThread("car1Main", function() {
-    var i;
-    for (i = 0; i < width; i++) {
-        bp.sync( {request:bp.Event("Recognized", {id:1, x:i, y:1}), waitFor: car1EventSetAll} );
-    }
-});
+for (var i = 0; i < numOfLanes; i++){
+    malfunctionProbability = bp.random.nextFloat()*(malfunctionProbabilityMax-malfunctionProbabilityMin)+malfunctionProbabilityMin;
+    malfunctionWindow = bp.random.nextInt(malfunctionWindowMax+1-malfunctionWindowMin)+malfunctionWindowMin;
+    laneDirection = bp.random.nextBoolean();
+    failureType = bp.random.nextBoolean();
 
-bp.registerBThread("car1Malfunction", function() {
-    var i;
-    for (i = 0; i < 2; i++) {
-        bp.sync( {waitFor:car1EventSetReal} );
-    }
-    if (bp.random.nextFloat() < 0) {
-        bp.sync( {request: bp.Event("Recognized", {id:1, x:-1, y:1}), block:car1EventSetReal} );
+    if (laneDirection){
+        (function(n){
+        bp.registerBThread("Main"+n, function() {
+            for (var j = 0; j < laneLength; j++) {
+                bp.sync( {request:bp.Event("Recognized", {id:n, x:j, y:n}), waitFor:  bp.EventSet('', function(e) {
+                        return (e.data.id == n);
+                    })} );
+            }
+        });
+        })(i);
     } else {
-        bp.sync( {waitFor: car1EventSetReal} );
+        (function(n){
+        bp.registerBThread("Main"+n, function() {
+            for (var j = laneLength-1; j > -1; j--) {
+                bp.sync( {request:bp.Event("Recognized", {id:n, x:j, y:n}), waitFor:  bp.EventSet('', function(e) {
+                        return (e.data.id == n);
+                    })} );
+            }
+        });
+        })(i);
     }
-    for (i = 3; i < width; i++) {
-        bp.sync( {waitFor:car1EventSetReal} );
-    }
-});
 
-bp.registerBThread("car2Main", function() {
-    var i;
-    for (i = 0; i < width; i++) {
-        bp.sync( {request:bp.Event("Recognized", {id:2, x:i, y:2}), waitFor: car2EventSetAll} );
-    }
-});
-
-bp.registerBThread("car2Malfunction", function() {
-    var i;
-    for (i = 0; i < 2; i++) {
-        bp.sync( {waitFor:car2EventSetReal} );
-    }
-    if (bp.random.nextFloat() < 0) {
-        bp.sync( {request: bp.Event("Recognized", {id:2, x:-1, y:2}), block:car2EventSetReal} );
+    if (failureType){
+        (function(n, window, p){
+        bp.registerBThread("car"+n+"MalfunctionA", function() {
+            for (var j = 0; j < laneLength; j++) {
+                if ((j+1)%window==0 && p > bp.random.nextFloat()) {
+                    bp.sync( {request: bp.Event("Recognized", {id:n, x:-1, y:n}), block:bp.Event("Recognized", {id:n, x:j, y:n})} );
+                } else {
+                    bp.sync( {waitFor: bp.Event("Recognized", {id:n, x:j, y:n})} );
+                }
+            }
+        });
+        })(i, malfunctionWindow, malfunctionProbability);
     } else {
-        bp.sync( {waitFor: car2EventSetReal} );
-    }
-    for (i = 3; i < width; i++) {
-        bp.sync( {waitFor:car2EventSetReal} );
-    }
-});
+        (function(n, window, p){
+            bp.registerBThread("car"+n+"MalfunctionB", function() {
+                for (var j = 0; j < laneLength; j++) {
+                    if ((j+1)%window==0 && p > bp.random.nextFloat()) {
+                        bp.sync( {request: bp.Event("Recognized", {id:n, x:j+(bp.random.nextBoolean()*2-1), y:n}), block:bp.Event("Recognized", {id:n, x:j, y:n})} );
+                    } else {
+                        bp.sync( {waitFor: bp.Event("Recognized", {id:n, x:j, y:n})} );
+                    }
+                }
+            });
+        })(i, malfunctionWindow, malfunctionProbability);
 
-bp.registerBThread("car3Main", function() {
-    var i;
-    for (i = 0; i < width; i++) {
-        bp.sync( {request:bp.Event("Recognized", {id:3, x:i, y:3}), waitFor: car3EventSetAll} );
     }
-});
-
-bp.registerBThread("car3Malfunction", function() {
-    var i;
-    for (i = 0; i < 2; i++) {
-        bp.sync( {waitFor:car3EventSetReal} );
-    }
-    if (bp.random.nextFloat() < 0) {
-        bp.sync( {request: bp.Event("Recognized", {id:3, x:-1, y:3}), block:car3EventSetReal} );
-    } else {
-        bp.sync( {waitFor: car3EventSetReal} );
-    }
-    for (i = 3; i < width; i++) {
-        bp.sync( {waitFor:car3EventSetReal} );
-    }
-});
 
 
+}
 
-bp.registerBThread("car4Main", function() {
-    var i;
-    for (i = 0; i < width; i++) {
-        bp.sync( {request:bp.Event("Recognized", {id:4, x:i, y:4}), waitFor: car4EventSetAll} );
-    }
-});
-
-bp.registerBThread("car4Malfunction", function() {
-    var i;
-    for (i = 0; i < 2; i++) {
-        bp.sync( {waitFor:car4EventSetReal} );
-    }
-    if (bp.random.nextFloat() < 0) {
-        bp.sync( {request: bp.Event("Recognized", {id:4, x:-1, y:4}), block:car4EventSetReal} );
-    } else {
-        bp.sync( {waitFor: car4EventSetReal} );
-    }
-    for (i = 3; i < width; i++) {
-        bp.sync( {waitFor:car4EventSetReal} );
-    }
-});
