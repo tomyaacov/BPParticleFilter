@@ -12,9 +12,10 @@ import il.ac.bgu.cs.bp.bpjs.model.BProgramSyncSnapshot;
 import il.ac.bgu.cs.bp.bpjs.model.BThreadSyncSnapshot;
 import il.ac.bgu.cs.bp.bpjs.model.ResourceBProgram;
 
+import java.io.Serializable;
 import java.util.*;
 
-public class BPFilterVisitedStateStore implements VisitedStateStore {
+public class BPFilterVisitedStateStore implements VisitedStateStore, Serializable {
 
     private final Set<Integer> visited = new HashSet<>();
     ArrayListMultimap<Integer, BProgramSyncSnapshot> map = ArrayListMultimap.create();
@@ -57,6 +58,7 @@ public class BPFilterVisitedStateStore implements VisitedStateStore {
             map.put(curKey, bProgramSyncSnapshot);
         }
     }
+
 
 //    private static final class Snapshot {
 //        final BProgramSyncSnapshot bProgramSyncSnapshot;

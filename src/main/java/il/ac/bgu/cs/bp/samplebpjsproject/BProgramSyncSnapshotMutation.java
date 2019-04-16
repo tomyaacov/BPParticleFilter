@@ -35,6 +35,9 @@ public class BProgramSyncSnapshotMutation extends Mutator<AnyGene<BProgramSyncSn
         //TODO: Is this the right approach for mutation
         BProgramSyncSnapshot cur = BProgramSyncSnapshotCloner.clone(bProgramSyncSnapshot);
         Set<BThreadSyncSnapshot> threadSnapshots = cur.getBThreadSnapshots();
+        if (threadSnapshots.isEmpty()){
+            return cur;
+        }
         int replace = random.nextInt(threadSnapshots.size());
         List<BThreadSyncSnapshot> curThreadSnapshots = new ArrayList<>(threadSnapshots);
         curThreadSnapshots.remove(replace);

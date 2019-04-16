@@ -12,6 +12,7 @@ import il.ac.bgu.cs.bp.bpjs.model.BProgramSyncSnapshot;
 
 import il.ac.bgu.cs.bp.bpjs.model.ResourceBProgram;
 import il.ac.bgu.cs.bp.bpjs.model.eventselection.EventSelectionResult;
+import il.ac.bgu.cs.bp.bpjs.model.eventselection.PrioritizedBSyncEventSelectionStrategy;
 import il.ac.bgu.cs.bp.bpjs.model.eventselection.SimpleEventSelectionStrategy;
 import io.jenetics.*;
 import io.jenetics.engine.Codec;
@@ -64,7 +65,7 @@ public class BPFilter {
         SimpleEventSelectionStrategyFilter ess = new SimpleEventSelectionStrategyFilter(new SimpleEventSelectionStrategy());
         externalBProgram = new ResourceBProgram(aResourceName, ess);
         bProgramRunner = new BProgramRunner(externalBProgram);
-        //bProgramRunner.addListener(new PrintBProgramRunnerListener());
+        bProgramRunner.addListener(new PrintBProgramRunnerListener());
         ParticleFilterEventListener particleFilterEventListener = new ParticleFilterEventListener();
         bProgramRunner.addListener(particleFilterEventListener);
         externalBProgram.setWaitForExternalEvents(false);
@@ -131,9 +132,10 @@ public class BPFilter {
         externalBProgram.setWaitForExternalEvents(false);
         DfsBProgramVerifier vrf = new DfsBProgramVerifier();
         //vrf.setDebugMode(true);
-        vrf.setMaxTraceLength(15);
+        vrf.setMaxTraceLength(80);
         store = new BPFilterVisitedStateStore();
         vrf.setVisitedNodeStore(store);
+        vrf.setProgressListener(new IDDfsProgressListener(60, 60, 20, 1500));
         VerificationResult res = vrf.verify(externalBProgram);
     }
 
