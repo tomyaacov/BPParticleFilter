@@ -24,7 +24,7 @@ public class Main {
         int populationSize = 15;
         double mutationProbability = 0.3;
         BPFilter bpFilter = new BPFilter(populationSize, mutationProbability);
-        BPFilter.aResourceName = "driving_car_single_bt.js";
+        BPFilter.aResourceName = "driving_car2.js";
         BPFilter.evolutionResolution = 3;
         BPFilter.fitnessNumOfIterations = 10;
 
@@ -76,6 +76,10 @@ public class Main {
         //System.out.println(bpssList.size());
         //System.out.println(bpssEstimatedList);
         System.out.println(statistics);
+        System.out.println(statistics.getFitness().getSum());
+        System.out.println(statistics.getFitness().getCount());
+        System.out.println(statistics.getFitness().getMean());
+
 
         List<Boolean> estimationAccuracy = new ArrayList<>();
         for (int i = 0; i < BPFilter.bpssEstimatedList.size(); i++){
