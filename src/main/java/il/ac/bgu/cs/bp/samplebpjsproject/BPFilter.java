@@ -51,13 +51,18 @@ public class BPFilter {
 
     public static List<BProgramSyncSnapshot> bpssEstimatedList = new LinkedList<>();
 
+    public static List<Double> meanFitness = new LinkedList<>();
+
     public static BPFilterVisitedStateStore store;
 
     public static BProgram externalBProgram;
 
-    public BPFilter(int populationSize, double mutationProbability) {
+    public static int bpssListSize;
+
+    public BPFilter(int populationSize, double mutationProbability, int bpssListSize1) {
         this.populationSize = populationSize;
         this.mutationProbability = mutationProbability;
+        bpssListSize = bpssListSize1;
         programStepCounter = 0;
     }
 
@@ -76,21 +81,24 @@ public class BPFilter {
         bProgram = new ResourceBProgram(aResourceName);
     }
 
-    public static BProgramSyncSnapshot newInstance (){
+    public static BPSSList newInstance (){
         BProgram bProgram = new ResourceBProgram(aResourceName);
         BProgramSyncSnapshot initBProgramSyncSnapshot = bProgram.setup();
+        BPSSList instance = new BPSSList(bpssListSize);
         try {
             ExecutorService executorService = ExecutorServiceMaker.makeWithName("BProgramRunner-" + 0);
             BProgramSyncSnapshot bProgramSyncSnapshot = initBProgramSyncSnapshot.start(executorService);// TODO: instance number should maybe be different
             executorService.shutdown();
-            return bProgramSyncSnapshot;
+            instance.getBProgramSyncSnapshots().set(bpssListSize-1, bProgramSyncSnapshot);
+            return instance;
         } catch (InterruptedException e) {
             e.printStackTrace();
             return null;
         }
     }
 
-    public static double fitness(final BProgramSyncSnapshot bProgramSyncSnapshot){
+    public static double fitness(final BPSSList bpssList){
+        BProgramSyncSnapshot bProgramSyncSnapshot = bpssList.getBProgramSyncSnapshots().get(bpssListSize-1);
         ExecutorService executorService = ExecutorServiceMaker.makeWithName("BProgramRunner-" + 0);
         List<Double> fitness = new ArrayList<>(Collections.nCopies(evolutionResolution, 0.0));
         BProgramSyncSnapshot cur;

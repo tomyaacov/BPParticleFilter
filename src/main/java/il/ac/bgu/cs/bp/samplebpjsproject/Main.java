@@ -21,55 +21,45 @@ import java.util.Set;
 public class Main {
     public static void main(final String[] args) throws Exception {
 
-        int populationSize = 15;
+        int bpssListSize = 5;
+        int populationSize = 100;
         double mutationProbability = 0.3;
-        BPFilter bpFilter = new BPFilter(populationSize, mutationProbability);
-        BPFilter.aResourceName = "driving_car2.js";
-        BPFilter.evolutionResolution = 3;
+        BPFilter bpFilter = new BPFilter(populationSize, mutationProbability, bpssListSize);
+        BPFilter.aResourceName = "driving_car.js";
+        BPFilter.evolutionResolution = 1;
         BPFilter.fitnessNumOfIterations = 10;
 
 
         BPFilter.runBprogram();
 
-//        File storeFile = new File("store.ser");
-//        if (storeFile.exists()){
-//            FileInputStream fileIn = new FileInputStream(storeFile);
-//            ObjectInputStream in = new ObjectInputStream(fileIn);
-//            BPFilter.store = (BPFilterVisitedStateStore) in.readObject();
-//            in.close();
-//            fileIn.close();
-//        } else {
-//            BPFilter.runOfflineModelChecking();
-//            FileOutputStream fileOut = new FileOutputStream("store.ser");
-//            ObjectOutputStream out = new ObjectOutputStream(fileOut);
-//            out.writeObject(BPFilter.store);
-//            out.close();
-//            fileOut.close();
-//        }
-
-        BPFilter.runOfflineModelChecking();
-        final Codec<BProgramSyncSnapshot, AnyGene<BProgramSyncSnapshot>>
+        final Codec<BPSSList, AnyGene<BPSSList>>
                 CODEC = Codec.of(Genotype.of(AnyChromosome.of(BPFilter::newInstance)), gt -> gt.getGene().getAllele());
 
-        final Engine<AnyGene<BProgramSyncSnapshot>, Double> engine = Engine
+        final Engine<AnyGene<BPSSList>, Double> engine = Engine
                 .builder(BPFilter::fitness, CODEC)
                 .populationSize(populationSize)
                 .offspringFraction(1)
                 //.survivorsSelector(new TournamentSelector<>(5))
                 .offspringSelector(new RouletteWheelSelectorDecorator())
-                .alterers(new BProgramSyncSnapshotTransitionOperator(bpFilter, false, true),
-                        new BProgramSyncSnapshotMutation(mutationProbability, bpFilter))
+                .alterers(new BPSSListTransitionOperator(bpFilter, true, true),
+                        new BPSSListMutation(mutationProbability, bpFilter, 1))
                 .maximizing()
                 .build();
 
         EvolutionStatistics<Double, DoubleMomentStatistics> statistics = EvolutionStatistics.ofNumber();
-        final MinMax<EvolutionResult<AnyGene<BProgramSyncSnapshot>, Double>> best = MinMax.of();
+        final MinMax<EvolutionResult<AnyGene<BPSSList>, Double>> best = MinMax.of();
 
         engine.stream()
                 //.limit(r -> programStepCounter*evolutionResolution >= bpssList.size())
                 .limit(bpFilter.bpssList.size()/bpFilter.evolutionResolution-1) // -1 remove the state in the end of the b-thread
                 .peek(statistics)
                 .peek(best).forEach(evolutionResult -> {
+                    OptionalDouble mf = evolutionResult.getPopulation().stream()
+                            .map(a -> a.getFitness())
+                            .mapToDouble(a -> a).average();
+                    if (mf.isPresent()){
+                        bpFilter.meanFitness.add(mf.getAsDouble());
+                    }
             bpFilter.bpssEstimatedList.add(StateEstimation.fittestIndividual(evolutionResult));
             //programStepCounter+=evolutionResolution;
         });
@@ -119,5 +109,25 @@ public class Main {
         System.out.println("Bt Accuracy " + estimationBtAccuracy);
         System.out.println("Total Bt accuracy: " + (btaverage.isPresent() ? btaverage.getAsDouble() : 0));
 
+        System.out.println("Mean fitness " + bpFilter.meanFitness);
+
     }
 }
+
+//        File storeFile = new File("store.ser");
+//        if (storeFile.exists()){
+//            FileInputStream fileIn = new FileInputStream(storeFile);
+//            ObjectInputStream in = new ObjectInputStream(fileIn);
+//            BPFilter.store = (BPFilterVisitedStateStore) in.readObject();
+//            in.close();
+//            fileIn.close();
+//        } else {
+//            BPFilter.runOfflineModelChecking();
+//            FileOutputStream fileOut = new FileOutputStream("store.ser");
+//            ObjectOutputStream out = new ObjectOutputStream(fileOut);
+//            out.writeObject(BPFilter.store);
+//            out.close();
+//            fileOut.close();
+//        }
+//
+//        BPFilter.runOfflineModelChecking();

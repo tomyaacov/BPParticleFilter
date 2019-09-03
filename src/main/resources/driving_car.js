@@ -1,21 +1,19 @@
 
 numOfLanes = 5;
-laneLength = 5;
+laneLength = 9;
 laneNumOfIterations = 5;
 malfunctionProbabilityMin = 0.01;
 malfunctionProbabilityMax = 0.2;
-var malfunctionProbability;
+var malfunctionProbability = 0.1;
 malfunctionWindowMin = 2;
 malfunctionWindowMax = 10;
-var malfunctionWindow;
+var malfunctionWindow=4;
 var laneDirection;
 var failureType;
 
 for (var i = 0; i < numOfLanes; i++){
-    malfunctionProbability = bp.random.nextFloat()*(malfunctionProbabilityMax-malfunctionProbabilityMin)+malfunctionProbabilityMin;
-    malfunctionWindow = bp.random.nextInt(malfunctionWindowMax+1-malfunctionWindowMin)+malfunctionWindowMin;
-    laneDirection = bp.random.nextBoolean();
-    failureType = bp.random.nextBoolean();
+    laneDirection = i%2;
+    failureType = i%2;
 
     if (laneDirection){
         (function(n){
@@ -54,14 +52,18 @@ for (var i = 0; i < numOfLanes; i++){
     } else {
         (function(n, window, p){
             bp.registerBThread("car"+n+"MalfunctionB", function() {
-                for (var j = 0; j < laneLength; j++) {
-                    if ((j+1)%window==0 && p > bp.random.nextFloat()) {
-                        bp.sync( {request: bp.Event("Recognized", {id:n, x:j+(bp.random.nextBoolean()*2-1), y:n}), block:bp.Event("Recognized", {id:n, x:j, y:n})} );
+            for (var j = laneLength-1; j > -1; j--) {
+                if ((j+1)%window==0 && p > bp.random.nextFloat()) {
+                    if (bp.random.nextBoolean()) {
+                        bp.sync( {request: bp.Event("Recognized", {id:n, x:j-1, y:n}), block:bp.Event("Recognized", {id:n, x:j, y:n})} );
                     } else {
-                        bp.sync( {waitFor: bp.Event("Recognized", {id:n, x:j, y:n})} );
+                        bp.sync( {request: bp.Event("Recognized", {id:n, x:j+1, y:n}), block:bp.Event("Recognized", {id:n, x:j, y:n})} );
                     }
+                } else {
+                    bp.sync( {waitFor: bp.Event("Recognized", {id:n, x:j, y:n})} );
                 }
-            });
+            }
+        });
         })(i, malfunctionWindow, malfunctionProbability);
 
     }

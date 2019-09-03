@@ -18,6 +18,7 @@ public class BProgramSyncSnapshotMutation extends Mutator<AnyGene<BProgramSyncSn
     @Getter @Setter
     private BPFilter bpFilter;
 
+
     AnyGene<BProgramSyncSnapshot> gene = AnyGene.of(BProgramSyncSnapshotMutation::newInstance);
 
     public BProgramSyncSnapshotMutation(double probability, BPFilter bpFilter) {
