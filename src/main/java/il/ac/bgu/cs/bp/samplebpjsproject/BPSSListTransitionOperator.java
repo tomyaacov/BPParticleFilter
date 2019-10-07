@@ -36,14 +36,14 @@ public class BPSSListTransitionOperator extends Mutator<AnyGene<BPSSList>, Doubl
 
     @Override
     protected AnyGene<BPSSList> mutate(AnyGene<BPSSList> gene, Random random) {
-        BProgramSyncSnapshot newBProgramSyncSnapshot = getNextBProgramSyncSnapshot(gene.getAllele().getLast());
+        //BProgramSyncSnapshot newBProgramSyncSnapshot = getNextBProgramSyncSnapshot(gene.getAllele().getLast(), gene.getAllele().executorService);
+        BProgramSyncSnapshot newBProgramSyncSnapshot = getNextBProgramSyncSnapshot(gene.getAllele().getLast(), ExecutorServiceMaker.makeWithName("BProgramRunner-" + BPFilter.INSTANCE_COUNTER.incrementAndGet()));
         BPSSList newCopy = gene.getAllele().cloneTransition(newBProgramSyncSnapshot);
         return gene.newInstance(newCopy);
     }
 
-    private BProgramSyncSnapshot getNextBProgramSyncSnapshot(BProgramSyncSnapshot bProgramSyncSnapshot) {
+    private BProgramSyncSnapshot getNextBProgramSyncSnapshot(BProgramSyncSnapshot bProgramSyncSnapshot, ExecutorService executorService) {
         //TODO: Is this the right approach if we dont have it in possible events
-        ExecutorService executorService = ExecutorServiceMaker.makeWithName("BProgramRunner-" + 0);
         BProgramSyncSnapshot newBProgramSyncSnapshot = BProgramSyncSnapshotCloner.clone(bProgramSyncSnapshot);
         for(int j = 0; j < BPFilter.evolutionResolution; j++){
             Set<BEvent> possibleEvents = BPFilter.bProgram.getEventSelectionStrategy().selectableEvents(newBProgramSyncSnapshot);

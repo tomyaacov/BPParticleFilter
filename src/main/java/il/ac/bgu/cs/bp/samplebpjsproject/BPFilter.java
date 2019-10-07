@@ -26,6 +26,7 @@ import lombok.Setter;
 
 import java.util.*;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class BPFilter {
 
@@ -59,6 +60,8 @@ public class BPFilter {
 
     public static int bpssListSize;
 
+    public static final AtomicInteger INSTANCE_COUNTER = new AtomicInteger();
+
     public BPFilter(int populationSize, double mutationProbability, int bpssListSize1) {
         this.populationSize = populationSize;
         this.mutationProbability = mutationProbability;
@@ -86,7 +89,7 @@ public class BPFilter {
         BProgramSyncSnapshot initBProgramSyncSnapshot = bProgram.setup();
         BPSSList instance = new BPSSList(bpssListSize);
         try {
-            ExecutorService executorService = ExecutorServiceMaker.makeWithName("BProgramRunner-" + 0);
+            ExecutorService executorService = instance.executorService;
             BProgramSyncSnapshot bProgramSyncSnapshot = initBProgramSyncSnapshot.start(executorService);// TODO: instance number should maybe be different
             executorService.shutdown();
             instance.getBProgramSyncSnapshots().set(bpssListSize-1, bProgramSyncSnapshot);
@@ -99,7 +102,8 @@ public class BPFilter {
 
     public static double fitness(final BPSSList bpssList){
         BProgramSyncSnapshot bProgramSyncSnapshot = bpssList.getBProgramSyncSnapshots().get(bpssListSize-1);
-        ExecutorService executorService = ExecutorServiceMaker.makeWithName("BProgramRunner-" + 0);
+        //ExecutorService executorService = bpssList.executorService;
+        ExecutorService executorService = ExecutorServiceMaker.makeWithName("BProgramRunner-" + BPFilter.INSTANCE_COUNTER.incrementAndGet());;
         List<Double> fitness = new ArrayList<>(Collections.nCopies(evolutionResolution, 0.0));
         BProgramSyncSnapshot cur;
         for(int i = 0; i < fitnessNumOfIterations; i++){

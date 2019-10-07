@@ -37,7 +37,8 @@ public class BPSSListMutation extends Mutator<AnyGene<BPSSList>, Double> {
     protected AnyGene<BPSSList> mutate(AnyGene<BPSSList> gene, Random random) {
         BPSSList newBProgramSyncSnapshot;
         if (option == 1){
-            newBProgramSyncSnapshot = option1(gene.getAllele(), random);
+            newBProgramSyncSnapshot = option1(gene.getAllele(), random, ExecutorServiceMaker.makeWithName("BProgramRunner-" + BPFilter.INSTANCE_COUNTER.incrementAndGet()));
+            //newBProgramSyncSnapshot = option1(gene.getAllele(), random, gene.getAllele().executorService);
         } else {
             newBProgramSyncSnapshot = option2(gene.getAllele(), random);
         }
@@ -45,8 +46,7 @@ public class BPSSListMutation extends Mutator<AnyGene<BPSSList>, Double> {
     }
 
 
-    private BPSSList option1(BPSSList bpssList, Random random) {
-        ExecutorService executorService = ExecutorServiceMaker.makeWithName("BProgramRunner-" + 0);
+    private BPSSList option1(BPSSList bpssList, Random random, ExecutorService executorService) {
         BPSSList newBProgramSyncSnapshot = new BPSSList(bpssList.getBProgramSyncSnapshots().size());
         if (newBProgramSyncSnapshot.getBProgramSyncSnapshots().get(0) == null){
             return bpssList; //TODO: what we do if individual is not "full"
