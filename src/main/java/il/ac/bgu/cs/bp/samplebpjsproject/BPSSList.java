@@ -16,31 +16,34 @@ public class BPSSList {
     @Getter @Setter
     private ArrayList<BProgramSyncSnapshot> bProgramSyncSnapshots;
 
-    //@Getter @Setter
-    public ExecutorService executorService;
+    public ExecutorService executorService1;
 
     public double probability;
 
     public ArrayList<BEvent> eventArrayList;
 
+    public int listSize;
+
     public BPSSList(int size) {
+        listSize = size;
         this.bProgramSyncSnapshots = new ArrayList<>(size);
         this.eventArrayList = new ArrayList<>(size);
         for (int i = 0; i < size; i++){
             this.bProgramSyncSnapshots.add(null);
             this.eventArrayList.add(null);
         }
-        executorService = ExecutorServiceMaker.makeWithName("BProgramRunner-" + BPFilter.INSTANCE_COUNTER.incrementAndGet());
+        //executorService = ExecutorServiceMaker.makeWithName("BProgramRunner-" + BPFilter.INSTANCE_COUNTER.incrementAndGet());
     }
 
     public BPSSList(BPSSList bpssList) {
+        this.listSize = bpssList.listSize;
         this.bProgramSyncSnapshots = new ArrayList<>(bpssList.bProgramSyncSnapshots.size());
         this.eventArrayList = new ArrayList<>(bpssList.bProgramSyncSnapshots.size());
         for (int i = 0; i < bpssList.bProgramSyncSnapshots.size(); i++){
             this.bProgramSyncSnapshots.add(bpssList.bProgramSyncSnapshots.get(i));
             this.eventArrayList.add(bpssList.eventArrayList.get(i));
         }
-        executorService = ExecutorServiceMaker.makeWithName("BProgramRunner-" + BPFilter.INSTANCE_COUNTER.incrementAndGet());
+        //executorService = ExecutorServiceMaker.makeWithName("BProgramRunner-" + BPFilter.INSTANCE_COUNTER.incrementAndGet());
     }
 
     public BProgramSyncSnapshot getLast(){
@@ -61,61 +64,40 @@ public class BPSSList {
                     continue;
                 }
                 newCopy.getBProgramSyncSnapshots().set(i, BProgramSyncSnapshotCloner.clone(bProgramSyncSnapshots.get(i)));
+                newCopy.eventArrayList.set(i, eventArrayList.get(i));
             }
         }
         return newCopy;
     }
 
-    public BPSSList cloneTransition(BProgramSyncSnapshot newbpss){
+    public BPSSList cloneTransition(BProgramSyncSnapshot newbpss, BEvent e){
         BPSSList newCopy = new BPSSList(bProgramSyncSnapshots.size());
         for (int i = 1; i < bProgramSyncSnapshots.size(); i++){
             if (bProgramSyncSnapshots.get(i) == null){
                 continue;
             }
             newCopy.getBProgramSyncSnapshots().set(i-1, BProgramSyncSnapshotCloner.clone(bProgramSyncSnapshots.get(i)));
+            newCopy.eventArrayList.set(i-1, eventArrayList.get(i));
         }
         newCopy.getBProgramSyncSnapshots().set(bProgramSyncSnapshots.size()-1, BProgramSyncSnapshotCloner.clone(newbpss));
+        newCopy.eventArrayList.set(bProgramSyncSnapshots.size()-1, e);
         return newCopy;
     }
 
-    public int set(){
-        return 0;
+    public BPSSList cloneTransition(BProgramSyncSnapshot newbpss){
+        return this.cloneTransition(newbpss, null);
     }
 
-//    public void setNoise(float Fnoise, float Tnoise, float Snoise) {
-//        this.forwardNoise = Fnoise;
-//        this.turnNoise = Tnoise;
-//        this.senseNoise = Snoise;
-//    }
-
-    /**
-     * Senses the distance of the particle to each of its landmarks
-     *
-     * @return a float array of distances to landmarks
-     */
-//    public float[] sense() {
-//        float[] ret = new float[landmarks.length];
-//
-//        for(int i=0;i<landmarks.length;i++){
-//            float dist = (float) MathX.distance(x, y, landmarks[i].x, landmarks[i].y);
-//            ret[i] = dist + (float)random.nextGaussian() * senseNoise;
-//        }
-//        return ret;
-//    }
-
-
-    public BPSSList move() {
-        boolean realityBased = true;
-        boolean simulationBased = true;
-        ExecutorService executorService = ExecutorServiceMaker.makeWithName("BProgramRunner-" + BPFilter.INSTANCE_COUNTER.incrementAndGet());
+    public void move(ExecutorService executorService) {
+        //ExecutorService executorService = ExecutorServiceMaker.makeWithName("BProgramRunner-" + BPFilter.INSTANCE_COUNTER.incrementAndGet());
         BProgramSyncSnapshot newBProgramSyncSnapshot = BProgramSyncSnapshotCloner.clone(this.getLast());
         for(int j = 0; j < BPFilter.evolutionResolution; j++){
             Set<BEvent> possibleEvents = BPFilter.bProgram.getEventSelectionStrategy().selectableEvents(newBProgramSyncSnapshot);
-            if (realityBased){
+            if (BPFilter.realityBased){
                 if(possibleEvents.contains(BPFilter.eventList.get(BPFilter.programStepCounter-BPFilter.evolutionResolution+j))){
                     newBProgramSyncSnapshot = this.triggerFromReality(executorService, newBProgramSyncSnapshot, j);
                 } else {
-                    if (simulationBased){
+                    if (BPFilter.simulationBased){
                         newBProgramSyncSnapshot = this.triggerFromSimulation(executorService, newBProgramSyncSnapshot, possibleEvents);
 
                     }
@@ -125,8 +107,14 @@ public class BPSSList {
             }
 
         }
-        executorService.shutdown();
-        return this.cloneTransition(newBProgramSyncSnapshot);
+        for (int i = 1; i < bProgramSyncSnapshots.size(); i++){
+            if (bProgramSyncSnapshots.get(i) == null){
+                continue;
+            }
+            bProgramSyncSnapshots.set(i-1, bProgramSyncSnapshots.get(i));
+        }
+        bProgramSyncSnapshots.set(bProgramSyncSnapshots.size()-1, newBProgramSyncSnapshot);
+
     }
 
     private BProgramSyncSnapshot triggerFromReality(ExecutorService executorService, BProgramSyncSnapshot newBProgramSyncSnapshot, int j) {
@@ -138,6 +126,14 @@ public class BPSSList {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+        for (int i = 1; i < bProgramSyncSnapshots.size(); i++){
+            if (eventArrayList.get(i) == null){
+                continue;
+            }
+            eventArrayList.set(i-1, eventArrayList.get(i));
+        }
+        eventArrayList.set(bProgramSyncSnapshots.size()-1, BPFilter.eventList.get(BPFilter.programStepCounter-BPFilter.evolutionResolution+j));
+        System.out.println("reality");
         return newBProgramSyncSnapshot;
     }
 
@@ -156,14 +152,46 @@ public class BPSSList {
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
+            for (int i = 1; i < bProgramSyncSnapshots.size(); i++){
+                if (eventArrayList.get(i) == null){
+                    continue;
+                }
+                eventArrayList.set(i-1, eventArrayList.get(i));
+            }
+            eventArrayList.set(bProgramSyncSnapshots.size()-1, esr.getEvent());
         }
+        System.out.println("simulation");
         return newBProgramSyncSnapshot;
     }
 
+    public double measurementProb(){
+        double score = 0.0;
+        int num = 0;
+        List<BEvent> eventList = new LinkedList<>();
+        for(int i = 0; i < listSize; i++){
+            if (eventArrayList.get(i) == null){
+                eventList.add(new BEvent("dummy"));
+                continue;
+            }
+            num++;
+            eventList.add(BPFilter.eventList.get(BPFilter.programStepCounter-listSize+i));
+        }
+        for(int i = 0; i < listSize; i++){
+            if (eventArrayList.get(i) == null){
+                continue;
+            }
+            int ind = eventList.indexOf(eventArrayList.get(i));
+            if (ind > -1){
+                score += 1.0/(Math.abs(ind-i)+1.0);
+            }
+        }
+        probability = score/num;
+        return probability;
+    }
 
-    public double measurementProb() {
+    public double measurementProb(ExecutorService executorService) {
         BProgramSyncSnapshot bProgramSyncSnapshot = this.getBProgramSyncSnapshots().get(bProgramSyncSnapshots.size()-1);
-        ExecutorService executorService = ExecutorServiceMaker.makeWithName("BProgramRunner-" + BPFilter.INSTANCE_COUNTER.incrementAndGet());
+        //ExecutorService executorService = ExecutorServiceMaker.makeWithName("BProgramRunner-" + BPFilter.INSTANCE_COUNTER.incrementAndGet());
         List<Double> fitness = new ArrayList<>(Collections.nCopies(BPFilter.evolutionResolution, 0.0));
         BProgramSyncSnapshot cur;
         for(int i = 0; i < BPFilter.fitnessNumOfIterations; i++){
@@ -189,7 +217,7 @@ public class BPSSList {
                 }
             }
         }
-        executorService.shutdown();
+        //executorService.shutdown();
         double finalFitness = 1.0;
         for(int i=0; i < fitness.size(); i++){
             finalFitness *= (fitness.get(i)/BPFilter.fitnessNumOfIterations);
@@ -202,7 +230,7 @@ public class BPSSList {
 
     @Override
     public String toString() {
-        return "";
+        return eventArrayList.toString();
     }
 
 }

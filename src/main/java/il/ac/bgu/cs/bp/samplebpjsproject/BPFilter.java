@@ -24,6 +24,8 @@ import io.jenetics.stat.MinMax;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.io.File;
+import java.lang.reflect.Field;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -32,9 +34,9 @@ public class BPFilter {
 
     public static String aResourceName;
 
-    public int populationSize;
+    public static int populationSize;
 
-    public double mutationProbability;
+    public static double mutationProbability;
 
     public static int evolutionResolution;
 
@@ -54,11 +56,29 @@ public class BPFilter {
 
     public static List<Double> meanFitness = new LinkedList<>();
 
+    public static List<Double> medianFitness = new LinkedList<>();
+
+    public static List<Double> minFitness = new LinkedList<>();
+
+    public static List<Double> maxFitness = new LinkedList<>();
+
+    public static List<Double> estimationAccuracy;
+
+    public static List<Double> estimationBtAccuracy;
+
     public static BPFilterVisitedStateStore store;
 
     public static BProgram externalBProgram;
 
     public static int bpssListSize;
+
+    public static boolean realityBased;
+
+    public static boolean simulationBased;
+
+    public static boolean doMutation;
+
+    public static long seed;
 
     public static final AtomicInteger INSTANCE_COUNTER = new AtomicInteger();
 
@@ -67,6 +87,15 @@ public class BPFilter {
         this.mutationProbability = mutationProbability;
         bpssListSize = bpssListSize1;
         programStepCounter = 0;
+    }
+
+    public void setup(){
+        programStepCounter = 0;
+        meanFitness = new LinkedList<>();
+        medianFitness = new LinkedList<>();
+        minFitness = new LinkedList<>();
+        maxFitness = new LinkedList<>();
+        bpssEstimatedList = new LinkedList<>();
     }
 
     public static void runBprogram(){
@@ -89,7 +118,7 @@ public class BPFilter {
         BProgramSyncSnapshot initBProgramSyncSnapshot = bProgram.setup();
         BPSSList instance = new BPSSList(bpssListSize);
         try {
-            ExecutorService executorService = instance.executorService;
+            ExecutorService executorService = instance.executorService1;
             BProgramSyncSnapshot bProgramSyncSnapshot = initBProgramSyncSnapshot.start(executorService);// TODO: instance number should maybe be different
             executorService.shutdown();
             instance.getBProgramSyncSnapshots().set(bpssListSize-1, bProgramSyncSnapshot);
@@ -149,6 +178,24 @@ public class BPFilter {
         vrf.setVisitedNodeStore(store);
         vrf.setProgressListener(new IDDfsProgressListener(60, 60, 20, 1500));
         VerificationResult res = vrf.verify(externalBProgram);
+    }
+
+    public String toString(){
+        StringBuilder str = new StringBuilder();
+        Class<?> c = this.getClass();
+        Field[] fields = c.getDeclaredFields();
+
+        for( Field field : fields ){
+            try {
+                str.append(field.getName());
+                str.append(": ");
+                str.append(field.get(this));
+                str.append(System.lineSeparator());
+            } catch (IllegalArgumentException e1) {
+            } catch (IllegalAccessException e1) {
+            }
+        }
+        return str.toString();
     }
 
 
