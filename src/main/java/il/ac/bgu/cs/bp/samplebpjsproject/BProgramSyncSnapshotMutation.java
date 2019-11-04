@@ -7,17 +7,21 @@ import il.ac.bgu.cs.bp.bpjs.model.BProgramSyncSnapshot;
 import il.ac.bgu.cs.bp.bpjs.model.BThreadSyncSnapshot;
 import io.jenetics.AnyGene;
 import io.jenetics.Mutator;
-import lombok.Getter;
-import lombok.Setter;
 
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 
 public class BProgramSyncSnapshotMutation extends Mutator<AnyGene<BProgramSyncSnapshot>, Double> {
 
-    @Getter @Setter
     private BPFilter bpFilter;
 
+    public BPFilter getBpFilter() {
+        return bpFilter;
+    }
+
+    public void setBpFilter(BPFilter bpFilter) {
+        this.bpFilter = bpFilter;
+    }
 
     AnyGene<BProgramSyncSnapshot> gene = AnyGene.of(BProgramSyncSnapshotMutation::newInstance);
 

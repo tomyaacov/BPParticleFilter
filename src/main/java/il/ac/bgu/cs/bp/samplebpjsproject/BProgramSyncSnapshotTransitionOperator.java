@@ -6,8 +6,6 @@ import il.ac.bgu.cs.bp.bpjs.model.BEvent;
 import il.ac.bgu.cs.bp.bpjs.model.BProgramSyncSnapshot;
 import il.ac.bgu.cs.bp.bpjs.model.eventselection.EventSelectionResult;
 import io.jenetics.*;
-import lombok.Getter;
-import lombok.Setter;
 
 import java.util.ArrayList;
 import java.util.Optional;
@@ -17,12 +15,33 @@ import java.util.concurrent.ExecutorService;
 
 public class BProgramSyncSnapshotTransitionOperator extends Mutator<AnyGene<BProgramSyncSnapshot>, Double> {
 
-    @Getter @Setter
     private BPFilter bpFilter;
-    @Getter @Setter
     private boolean realityBased;
-    @Getter @Setter
     private boolean simulationBased;
+
+    public BPFilter getBpFilter() {
+        return bpFilter;
+    }
+
+    public void setBpFilter(BPFilter bpFilter) {
+        this.bpFilter = bpFilter;
+    }
+
+    public boolean isRealityBased() {
+        return realityBased;
+    }
+
+    public void setRealityBased(boolean realityBased) {
+        this.realityBased = realityBased;
+    }
+
+    public boolean isSimulationBased() {
+        return simulationBased;
+    }
+
+    public void setSimulationBased(boolean simulationBased) {
+        this.simulationBased = simulationBased;
+    }
 
     AnyGene<BProgramSyncSnapshot> gene = AnyGene.of(BProgramSyncSnapshotTransitionOperator::newInstance);
 

@@ -13,6 +13,9 @@ import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
+import java.util.stream.Collectors;
+import java.util.stream.DoubleStream;
+import java.util.stream.IntStream;
 
 public class ParticleFilter {
 
@@ -36,24 +39,18 @@ public class ParticleFilter {
     }
 
     public void move() {
-        for (int i = 0; i < numParticles; i++) {
-//            final int c = i;
-//            executorService.execute(() -> particles.get(c).move(executorService));
-//
-            particles.get(i).move(executorService);
-        }
+        particles.stream().parallel().forEach(p -> {
+            p.move(executorService);
+        });
     }
 
-    public void calculateProb(){
-        meanFitness = 0f;
-        double[] numArray = new double[numParticles];
-        for (int i = 0; i < numParticles; i++) {
-            //particles.get(i).measurementProb(executorService);
-            particles.get(i).measurementProb();
-            meanFitness += particles.get(i).probability;
-            numArray[i] = particles.get(i).probability;
-        }
-        Arrays.sort(numArray);
+    public void calculateProb(ExecutorService executorService){
+        DoubleStream fitnessStream = particles.stream().parallel().mapToDouble(p -> {
+            p.measurementProb(executorService);
+            return p.probability;
+        }).sorted();
+        double[] numArray = fitnessStream.toArray();
+        meanFitness = DoubleStream.of(numArray).average().getAsDouble();
         int middle = numArray.length/2;
         if (numArray.length%2 == 1)
             medianFitness = numArray[middle];
@@ -61,7 +58,6 @@ public class ParticleFilter {
             medianFitness = (numArray[middle-1] + numArray[middle]) / 2;
         minFitness = numArray[0];
         maxFitness = numArray[numParticles-1];
-        meanFitness /= numParticles;
     }
 
     public BPSSList resample() {
@@ -121,7 +117,7 @@ public class ParticleFilter {
         try {
             BProgramSyncSnapshot bProgramSyncSnapshot = initBProgramSyncSnapshot.start(executorService);// TODO: instance number should maybe be different
             //executorService.shutdown();
-            instance.getBProgramSyncSnapshots().set(BPFilter.bpssListSize-1, bProgramSyncSnapshot);
+            instance.bProgramSyncSnapshots.set(BPFilter.bpssListSize-1, bProgramSyncSnapshot);
             return instance;
         } catch (InterruptedException e) {
             e.printStackTrace();
@@ -130,7 +126,11 @@ public class ParticleFilter {
     }
 
     public void mutate(){
-        return;
+        particles.stream().parallel().forEach(p ->{
+            if(gen.nextFloat() < BPFilter.mutationProbability){
+                p.mutate(gen, executorService);
+            }
+        });
     }
 
     public void shutdown(){
@@ -164,10 +164,12 @@ public class ParticleFilter {
 
         for (int i=0; i < BPFilter.bpssList.size()/BPFilter.evolutionResolution-1; i++){
             filter.move();
-            if (BPFilter.doMutation){
-
+            if(i >= BPFilter.bpssListSize - 1){
+                if (BPFilter.doMutation){
+                    filter.mutate();
+                }
+                filter.calculateProb(filter.executorService);
             }
-            filter.calculateProb();
             BPFilter.meanFitness.add(filter.meanFitness);
             BPFilter.medianFitness.add(filter.medianFitness);
             BPFilter.minFitness.add(filter.minFitness);
@@ -203,24 +205,28 @@ public class ParticleFilter {
             }
             BPFilter.estimationBtAccuracy.add((double)count/bpssSize);
         }
-        OptionalDouble average = BPFilter.estimationAccuracy
-                .stream()
-                .mapToDouble(a -> a)
-                .average();
-        System.out.println("Accuracy " + BPFilter.estimationAccuracy);
-        System.out.println("Total accuracy: " + (average.isPresent() ? average.getAsDouble() : 0));
 
-        OptionalDouble btaverage = BPFilter.estimationBtAccuracy
-                .stream()
-                .mapToDouble(a -> a)
-                .average();
-        System.out.println("Bt Accuracy " + BPFilter.estimationBtAccuracy);
-        System.out.println("Total Bt accuracy: " + (btaverage.isPresent() ? btaverage.getAsDouble() : 0));
+        if (BPFilter.debug) {
+            OptionalDouble average = BPFilter.estimationAccuracy
+                    .stream()
+                    .mapToDouble(a -> a)
+                    .average();
+            System.out.println("Accuracy " + BPFilter.estimationAccuracy);
+            System.out.println("Total accuracy: " + (average.isPresent() ? average.getAsDouble() : 0));
 
-        System.out.println("Mean fitness " + BPFilter.meanFitness);
-        System.out.println("Median fitness " + BPFilter.medianFitness);
-        System.out.println("Min fitness " + BPFilter.minFitness);
-        System.out.println("Max fitness " + BPFilter.maxFitness);
+            OptionalDouble btaverage = BPFilter.estimationBtAccuracy
+                    .stream()
+                    .mapToDouble(a -> a)
+                    .average();
+
+            System.out.println("Bt Accuracy " + BPFilter.estimationBtAccuracy);
+            System.out.println("Total Bt accuracy: " + (btaverage.isPresent() ? btaverage.getAsDouble() : 0));
+
+            System.out.println("Mean fitness " + BPFilter.meanFitness);
+            System.out.println("Median fitness " + BPFilter.medianFitness);
+            System.out.println("Min fitness " + BPFilter.minFitness);
+            System.out.println("Max fitness " + BPFilter.maxFitness);
+        }
         ParticleFilter.saveResults(round, bpFilter, folderName);
         long endTime = System.currentTimeMillis();
         long timeElapsed = endTime - startTime;
@@ -228,17 +234,18 @@ public class ParticleFilter {
     }
 
     public static void main(final String[] args) throws Exception {
-        int bpssListSize = 5;
-        int populationSize = 1;
-        double mutationProbability = 0.3;
-        BPFilter bpFilter = new BPFilter(populationSize, mutationProbability, bpssListSize);
+        BPFilter bpFilter = new BPFilter();
+        BPFilter.bpssListSize = 5;
+        BPFilter.populationSize = 100;
+        BPFilter.mutationProbability = 0.1;
         BPFilter.aResourceName = "driving_car.js";
         BPFilter.evolutionResolution = 1;
         BPFilter.fitnessNumOfIterations = 10;
         BPFilter.realityBased = true;
         BPFilter.simulationBased = true;
-        BPFilter.doMutation = false;
+        BPFilter.doMutation = true;
         BPFilter.seed = 1;
+        BPFilter.debug = true;
 
 
         String name = "results" + File.separator + new SimpleDateFormat("yyyyMMddHHmm").format(new Date());
@@ -247,10 +254,12 @@ public class ParticleFilter {
 
         Files.write(Paths.get(name + File.separator + "parameters.txt"), bpFilter.toString().getBytes());
 
-        int rounds = 1;
+        int rounds = 5;
         for (int i=0; i < rounds; i++){
             ParticleFilter.run(i, bpFilter, name);
             bpFilter.setup();
         }
+        String command = "python3 " + "results" + File.separator + "plot_results.py " + name;
+        Process proc = Runtime.getRuntime().exec(command);
     }
 }

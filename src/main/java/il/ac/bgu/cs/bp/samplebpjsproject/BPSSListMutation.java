@@ -9,8 +9,6 @@ import il.ac.bgu.cs.bp.bpjs.model.BThreadSyncSnapshot;
 import il.ac.bgu.cs.bp.bpjs.model.eventselection.EventSelectionResult;
 import io.jenetics.AnyGene;
 import io.jenetics.Mutator;
-import lombok.Getter;
-import lombok.Setter;
 
 import java.util.*;
 import java.util.concurrent.ExecutorService;
@@ -18,11 +16,8 @@ import java.util.concurrent.ExecutorService;
 public class BPSSListMutation extends Mutator<AnyGene<BPSSList>, Double> {
 
 
-    @Getter @Setter
     private BPFilter bpFilter;
 
-
-    @Getter @Setter
     private int option;
 
     AnyGene<BPSSList> gene = AnyGene.of(BPSSListMutation::newInstance);
@@ -47,23 +42,23 @@ public class BPSSListMutation extends Mutator<AnyGene<BPSSList>, Double> {
 
 
     private BPSSList option1(BPSSList bpssList, Random random, ExecutorService executorService) {
-        BPSSList newBProgramSyncSnapshot = new BPSSList(bpssList.getBProgramSyncSnapshots().size());
-        if (newBProgramSyncSnapshot.getBProgramSyncSnapshots().get(0) == null){
+        BPSSList newBProgramSyncSnapshot = new BPSSList(bpssList.bProgramSyncSnapshots.size());
+        if (newBProgramSyncSnapshot.bProgramSyncSnapshots.get(0) == null){
             return bpssList; //TODO: what we do if individual is not "full"
         }
         for (int i = 0; i < 10; i++){
             newBProgramSyncSnapshot = bpssList.cloneFrom(random.nextDouble());
-            for (int j = 0; j < newBProgramSyncSnapshot.getBProgramSyncSnapshots().size(); j++){
-                if (newBProgramSyncSnapshot.getBProgramSyncSnapshots().get(j) == null){
-                    Set<BEvent> possibleEvents = BPFilter.bProgram.getEventSelectionStrategy().selectableEvents(newBProgramSyncSnapshot.getBProgramSyncSnapshots().get(j-1));
+            for (int j = 0; j < newBProgramSyncSnapshot.bProgramSyncSnapshots.size(); j++){
+                if (newBProgramSyncSnapshot.bProgramSyncSnapshots.get(j) == null){
+                    Set<BEvent> possibleEvents = BPFilter.bProgram.getEventSelectionStrategy().selectableEvents(newBProgramSyncSnapshot.bProgramSyncSnapshots.get(j-1));
                     if (possibleEvents.isEmpty()){
-                        newBProgramSyncSnapshot.getBProgramSyncSnapshots().set(j,newBProgramSyncSnapshot.getBProgramSyncSnapshots().get(j-1));
+                        newBProgramSyncSnapshot.bProgramSyncSnapshots.set(j,newBProgramSyncSnapshot.bProgramSyncSnapshots.get(j-1));
                     } else {
-                        Optional res = BPFilter.bProgram.getEventSelectionStrategy().select(newBProgramSyncSnapshot.getBProgramSyncSnapshots().get(j-1), possibleEvents);
+                        Optional res = BPFilter.bProgram.getEventSelectionStrategy().select(newBProgramSyncSnapshot.bProgramSyncSnapshots.get(j-1), possibleEvents);
                         if (res.isPresent()){
                             EventSelectionResult esr = (EventSelectionResult)res.get();
                             try {
-                                newBProgramSyncSnapshot.getBProgramSyncSnapshots().set(j,newBProgramSyncSnapshot.getBProgramSyncSnapshots().get(j-1).triggerEvent(
+                                newBProgramSyncSnapshot.bProgramSyncSnapshots.set(j,newBProgramSyncSnapshot.bProgramSyncSnapshots.get(j-1).triggerEvent(
                                         esr.getEvent(),
                                         executorService,
                                         new ArrayList<>())); // dummy
@@ -75,8 +70,8 @@ public class BPSSListMutation extends Mutator<AnyGene<BPSSList>, Double> {
 
                 }
             }
-            if (!newBProgramSyncSnapshot.getBProgramSyncSnapshots().get(newBProgramSyncSnapshot.getBProgramSyncSnapshots().size()-1)
-                    .equals(bpssList.getBProgramSyncSnapshots().get(bpssList.getBProgramSyncSnapshots().size()-1))){
+            if (!newBProgramSyncSnapshot.bProgramSyncSnapshots.get(newBProgramSyncSnapshot.bProgramSyncSnapshots.size()-1)
+                    .equals(bpssList.bProgramSyncSnapshots.get(bpssList.bProgramSyncSnapshots.size()-1))){
                 break;
             }
         }

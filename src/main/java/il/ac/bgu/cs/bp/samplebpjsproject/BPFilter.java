@@ -21,8 +21,6 @@ import io.jenetics.engine.EvolutionResult;
 import io.jenetics.engine.EvolutionStatistics;
 import io.jenetics.stat.DoubleMomentStatistics;
 import io.jenetics.stat.MinMax;
-import lombok.Getter;
-import lombok.Setter;
 
 import java.io.File;
 import java.lang.reflect.Field;
@@ -78,15 +76,21 @@ public class BPFilter {
 
     public static boolean doMutation;
 
+    public static boolean debug;
+
     public static long seed;
 
     public static final AtomicInteger INSTANCE_COUNTER = new AtomicInteger();
 
     public BPFilter(int populationSize, double mutationProbability, int bpssListSize1) {
-        this.populationSize = populationSize;
-        this.mutationProbability = mutationProbability;
+        populationSize = populationSize;
+        mutationProbability = mutationProbability;
         bpssListSize = bpssListSize1;
         programStepCounter = 0;
+    }
+
+    public BPFilter(){
+
     }
 
     public void setup(){
@@ -102,7 +106,9 @@ public class BPFilter {
         SimpleEventSelectionStrategyFilter ess = new SimpleEventSelectionStrategyFilter(new SimpleEventSelectionStrategy());
         externalBProgram = new ResourceBProgram(aResourceName, ess);
         bProgramRunner = new BProgramRunner(externalBProgram);
-        bProgramRunner.addListener(new PrintBProgramRunnerListener());
+        if (debug) {
+            bProgramRunner.addListener(new PrintBProgramRunnerListener());
+        }
         ParticleFilterEventListener particleFilterEventListener = new ParticleFilterEventListener();
         bProgramRunner.addListener(particleFilterEventListener);
         externalBProgram.setWaitForExternalEvents(false);
@@ -121,7 +127,7 @@ public class BPFilter {
             ExecutorService executorService = instance.executorService1;
             BProgramSyncSnapshot bProgramSyncSnapshot = initBProgramSyncSnapshot.start(executorService);// TODO: instance number should maybe be different
             executorService.shutdown();
-            instance.getBProgramSyncSnapshots().set(bpssListSize-1, bProgramSyncSnapshot);
+            instance.bProgramSyncSnapshots.set(bpssListSize-1, bProgramSyncSnapshot);
             return instance;
         } catch (InterruptedException e) {
             e.printStackTrace();
@@ -130,7 +136,7 @@ public class BPFilter {
     }
 
     public static double fitness(final BPSSList bpssList){
-        BProgramSyncSnapshot bProgramSyncSnapshot = bpssList.getBProgramSyncSnapshots().get(bpssListSize-1);
+        BProgramSyncSnapshot bProgramSyncSnapshot = bpssList.bProgramSyncSnapshots.get(bpssListSize-1);
         //ExecutorService executorService = bpssList.executorService;
         ExecutorService executorService = ExecutorServiceMaker.makeWithName("BProgramRunner-" + BPFilter.INSTANCE_COUNTER.incrementAndGet());;
         List<Double> fitness = new ArrayList<>(Collections.nCopies(evolutionResolution, 0.0));
