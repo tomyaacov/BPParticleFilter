@@ -1,19 +1,13 @@
 
-numOfLanes = 5;
-laneLength = 9;
-laneNumOfIterations = 5;
-malfunctionProbabilityMin = 0.01;
-malfunctionProbabilityMax = 0.2;
-var malfunctionProbability = 0.1;
-malfunctionWindowMin = 2;
-malfunctionWindowMax = 10;
-var malfunctionWindow=4;
-var laneDirection;
-var failureType;
+const numOfLanes = 5;
+const laneLength = 9;
+const laneNumOfIterations = 5;
+const malfunctionProbability = 0.1;
+const  malfunctionWindow=4;
 
 for (var i = 0; i < numOfLanes; i++){
-    laneDirection = i%2;
-    failureType = i%2;
+    const laneDirection = i%2;
+    const failureType = i%2;
 
     if (laneDirection){
         (function(n){

@@ -60,6 +60,8 @@ public class BPFilter {
 
     public static List<Double> maxFitness = new LinkedList<>();
 
+    public static List<Double> meanPopulationAccuracy = new LinkedList<>();
+
     public static List<Double> estimationAccuracy;
 
     public static List<Double> estimationBtAccuracy;
@@ -80,6 +82,8 @@ public class BPFilter {
 
     public static long seed;
 
+    public static String particleAnalysisData = "";
+
     public static final AtomicInteger INSTANCE_COUNTER = new AtomicInteger();
 
     public BPFilter(int populationSize, double mutationProbability, int bpssListSize1) {
@@ -99,11 +103,13 @@ public class BPFilter {
         medianFitness = new LinkedList<>();
         minFitness = new LinkedList<>();
         maxFitness = new LinkedList<>();
+        meanPopulationAccuracy = new LinkedList<>();
         bpssEstimatedList = new LinkedList<>();
+        particleAnalysisData = "";
     }
 
     public static void runBprogram(){
-        SimpleEventSelectionStrategyFilter ess = new SimpleEventSelectionStrategyFilter(new SimpleEventSelectionStrategy());
+        SimpleEventSelectionStrategyFilter ess = new SimpleEventSelectionStrategyFilter(new SimpleEventSelectionStrategy(seed));
         externalBProgram = new ResourceBProgram(aResourceName, ess);
         bProgramRunner = new BProgramRunner(externalBProgram);
         if (debug) {

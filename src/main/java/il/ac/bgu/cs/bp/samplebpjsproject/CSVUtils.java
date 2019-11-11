@@ -64,5 +64,12 @@ public class CSVUtils {
         writer.flush();
         writer.close();
     }
+    public static void writeResults(String csvFile, String value) throws IOException{
+        FileWriter writer = new FileWriter(csvFile, true);
+        writer.write(value);
+        writer.flush();
+        writer.close();
+    }
+
 
 }

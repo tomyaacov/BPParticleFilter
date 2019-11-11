@@ -5,6 +5,7 @@ import il.ac.bgu.cs.bp.bpjs.model.BProgram;
 import il.ac.bgu.cs.bp.bpjs.model.BProgramSyncSnapshot;
 import il.ac.bgu.cs.bp.bpjs.model.BThreadSyncSnapshot;
 import il.ac.bgu.cs.bp.bpjs.model.ResourceBProgram;
+import il.ac.bgu.cs.bp.bpjs.model.eventselection.SimpleEventSelectionStrategy;
 
 import java.io.File;
 import java.io.IOException;
@@ -21,21 +22,25 @@ public class ParticleFilter {
 
     ArrayList<BPSSList> particles;
     int numParticles = 0;
-    Random gen = new Random();
+    Random gen;
     double meanFitness;
     double medianFitness;
     double minFitness;
     double maxFitness;
+    double probabilitiesSum;
     public ExecutorService executorService;
+    public SimpleEventSelectionStrategy ess;
 
     public ParticleFilter(int numParticles) {
+        gen = new Random();
+        gen.setSeed(BPFilter.seed);
         this.numParticles = numParticles;
         executorService = ExecutorServiceMaker.makeWithName("BProgramRunner-" + BPFilter.INSTANCE_COUNTER.incrementAndGet());
+        ess = new SimpleEventSelectionStrategy(BPFilter.seed);
         particles = new ArrayList<>(numParticles);
         for (int i = 0; i < numParticles; i++) {
             particles.add(i, newParticle());
         }
-        gen.setSeed(BPFilter.seed);
     }
 
     public void move() {
@@ -63,20 +68,17 @@ public class ParticleFilter {
     public BPSSList resample() {
         ArrayList<BPSSList> new_particles = new ArrayList<>(numParticles);
 
-        float B = 0f;
+        double B;
         BPSSList best = getBestParticle();
-        int index = (int) gen.nextFloat() * numParticles;
+        int index = (int) (gen.nextFloat() * numParticles);
         for (int i = 0; i < numParticles; i++) {
-            B += gen.nextFloat() * 2f * best.probability;
-            while (B > particles.get(index).probability) {
+            B = gen.nextFloat() * probabilitiesSum;
+            while (B > 0) {
                 B -= particles.get(index).probability;
                 index = circle(index + 1, numParticles);
             }
             new_particles.add(i, new BPSSList(particles.get(index)));
         }
-//        for (int i = 0; i < numParticles; i++){
-//            particles.get(i).executorService.shutdown();
-//        }
         particles = new_particles;
         return best;
     }
@@ -92,8 +94,10 @@ public class ParticleFilter {
     }
 
     public BPSSList getBestParticle() {
+        probabilitiesSum = 0;
         BPSSList particle = particles.get(0);
         for (int i = 0; i < numParticles; i++) {
+            probabilitiesSum += particles.get(i).probability;
             if (particles.get(i).probability > particle.probability) {
                 particle = particles.get(i);
             }
@@ -116,7 +120,6 @@ public class ParticleFilter {
         BPSSList instance = new BPSSList(BPFilter.bpssListSize);
         try {
             BProgramSyncSnapshot bProgramSyncSnapshot = initBProgramSyncSnapshot.start(executorService);// TODO: instance number should maybe be different
-            //executorService.shutdown();
             instance.bProgramSyncSnapshots.set(BPFilter.bpssListSize-1, bProgramSyncSnapshot);
             return instance;
         } catch (InterruptedException e) {
@@ -133,10 +136,42 @@ public class ParticleFilter {
         });
     }
 
+    public void addPopulationMeanAccuracy(){
+
+        BPFilter.meanPopulationAccuracy.add(particles.stream().parallel().mapToDouble(p ->{
+            return p.getLast().equals(BPFilter.bpssList.get(BPFilter.programStepCounter)) ? 1.0 : 0.0;
+        }).average().getAsDouble());
+    }
+
+    public void generateParticleAnalysisTable(int round, String folderName) throws IOException{
+        String name = folderName + File.separator + round;
+        String data = particles.stream().parallel().map(p -> {
+            return String.valueOf(BPFilter.programStepCounter) + ","
+                    + p.probability + ","
+                    + (p.getLast().equals(BPFilter.bpssList.get(BPFilter.programStepCounter)) ? "1" : "0") + ","
+                    + btAccuray(p.getLast(), BPFilter.bpssList.get(BPFilter.programStepCounter));
+        }).collect( Collectors.joining( System.lineSeparator() ) );
+        BPFilter.particleAnalysisData = BPFilter.particleAnalysisData + data + System.lineSeparator();
+    }
+
+    public static double btAccuray(BProgramSyncSnapshot a, BProgramSyncSnapshot b){
+        int count = 0;
+        Set<BThreadSyncSnapshot> real = a.getBThreadSnapshots();
+        Set<BThreadSyncSnapshot> estimated = b.getBThreadSnapshots();
+        int bpssSize = real.size();
+        for (BThreadSyncSnapshot rbt : real){
+            for (BThreadSyncSnapshot ebt : estimated){
+                if (rbt.getName().equals(ebt.getName())){
+                    if (ebt.equals(rbt)){
+                        count++;
+                    }
+                }
+            }
+        }
+        return (double)count/bpssSize;
+    }
+
     public void shutdown(){
-//        for (int i = 0; i < numParticles; i++){
-//            particles.get(i).executorService.shutdown();
-//        }
         executorService.shutdown();
     }
 
@@ -150,6 +185,8 @@ public class ParticleFilter {
         CSVUtils.writeResults(name + File.separator + "maxFitness.csv", BPFilter.maxFitness);
         CSVUtils.writeResults(name + File.separator + "estimationAccuracy.csv", BPFilter.estimationAccuracy);
         CSVUtils.writeResults(name + File.separator + "estimationBtAccuracy.csv", BPFilter.estimationBtAccuracy);
+        CSVUtils.writeResults(name + File.separator + "meanPopulationAccuracy.csv", BPFilter.meanPopulationAccuracy);
+        CSVUtils.writeResults(name + File.separator + "particleAnalysisTable.csv", BPFilter.particleAnalysisData);
     }
 
     public static void run(int round, BPFilter bpFilter, String folderName) throws IOException{
@@ -174,6 +211,10 @@ public class ParticleFilter {
             BPFilter.medianFitness.add(filter.medianFitness);
             BPFilter.minFitness.add(filter.minFitness);
             BPFilter.maxFitness.add(filter.maxFitness);
+            filter.addPopulationMeanAccuracy();
+            if (BPFilter.debug){
+                filter.generateParticleAnalysisTable(round, folderName);
+            }
             BPFilter.programStepCounter = BPFilter.programStepCounter+BPFilter.evolutionResolution;
             BPSSList estimation = filter.resample();
             BPFilter.bpssEstimatedList.add(estimation.getLast());
@@ -186,24 +227,9 @@ public class ParticleFilter {
             BPFilter.estimationAccuracy.add(BPFilter.bpssEstimatedList.get(i).equals(BPFilter.bpssList.get(BPFilter.evolutionResolution *(i+1))) ? 1.0 : 0.0);
         }
         BPFilter.estimationBtAccuracy = new ArrayList<>();
-        int count;
-        int bpssSize;
-        Set<BThreadSyncSnapshot> real, estimated;
         for (int i = 0; i < BPFilter.bpssEstimatedList.size(); i++){
-            count = 0;
-            real = BPFilter.bpssList.get(BPFilter.evolutionResolution *(i+1)).getBThreadSnapshots();
-            estimated = BPFilter.bpssEstimatedList.get(i).getBThreadSnapshots();
-            bpssSize = real.size();
-            for (BThreadSyncSnapshot rbt : real){
-                for (BThreadSyncSnapshot ebt : estimated){
-                    if (rbt.getName().equals(ebt.getName())){
-                        if (ebt.equals(rbt)){
-                            count++;
-                        }
-                    }
-                }
-            }
-            BPFilter.estimationBtAccuracy.add((double)count/bpssSize);
+            BPFilter.estimationBtAccuracy.add(btAccuray(BPFilter.bpssList.get(BPFilter.evolutionResolution *(i+1)),
+                    BPFilter.bpssEstimatedList.get(i)));
         }
 
         if (BPFilter.debug) {
@@ -236,15 +262,14 @@ public class ParticleFilter {
     public static void main(final String[] args) throws Exception {
         BPFilter bpFilter = new BPFilter();
         BPFilter.bpssListSize = 5;
-        BPFilter.populationSize = 100;
+        BPFilter.populationSize = 2;
         BPFilter.mutationProbability = 0.1;
         BPFilter.aResourceName = "driving_car.js";
         BPFilter.evolutionResolution = 1;
-        BPFilter.fitnessNumOfIterations = 10;
+        BPFilter.fitnessNumOfIterations = 5;
         BPFilter.realityBased = true;
         BPFilter.simulationBased = true;
-        BPFilter.doMutation = true;
-        BPFilter.seed = 1;
+        BPFilter.doMutation = false;
         BPFilter.debug = true;
 
 
@@ -254,8 +279,9 @@ public class ParticleFilter {
 
         Files.write(Paths.get(name + File.separator + "parameters.txt"), bpFilter.toString().getBytes());
 
-        int rounds = 5;
+        int rounds = 1;
         for (int i=0; i < rounds; i++){
+            BPFilter.seed = i;
             ParticleFilter.run(i, bpFilter, name);
             bpFilter.setup();
         }

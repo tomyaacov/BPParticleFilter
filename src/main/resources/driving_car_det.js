@@ -1,13 +1,8 @@
 
-numOfLanes = 5;
-laneLength = 9;
-laneNumOfIterations = 5;
-malfunctionProbabilityMin = 0.01;
-malfunctionProbabilityMax = 0.2;
-var malfunctionProbability = 0.0;
-malfunctionWindowMin = 2;
-malfunctionWindowMax = 10;
-var malfunctionWindow=4;
+const numOfLanes = 5;
+const laneLength = 9;
+const laneNumOfIterations = 5;
+const malfunctionWindow=4;
 var laneDirection;
 var failureType;
 
@@ -48,7 +43,7 @@ for (var i = 0; i < numOfLanes; i++){
                     }
                 }
             });
-        })(i, malfunctionWindow, malfunctionProbability);
+        })(i, malfunctionWindow, 0);
     } else {
         (function(n, window, p){
             bp.registerBThread("car"+n+"MalfunctionB", function() {
@@ -64,7 +59,7 @@ for (var i = 0; i < numOfLanes; i++){
                     }
                 }
             });
-        })(i, malfunctionWindow, malfunctionProbability);
+        })(i, malfunctionWindow, 0);
 
     }
 
