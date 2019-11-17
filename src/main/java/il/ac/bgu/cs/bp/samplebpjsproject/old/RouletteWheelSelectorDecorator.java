@@ -1,5 +1,6 @@
-package il.ac.bgu.cs.bp.samplebpjsproject;
+package il.ac.bgu.cs.bp.samplebpjsproject.old;
 
+import il.ac.bgu.cs.bp.samplebpjsproject.BPFilter;
 import io.jenetics.Optimize;
 import io.jenetics.Phenotype;
 import io.jenetics.RouletteWheelSelector;

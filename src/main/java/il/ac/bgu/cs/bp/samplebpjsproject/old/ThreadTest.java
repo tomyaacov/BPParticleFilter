@@ -1,4 +1,4 @@
-package il.ac.bgu.cs.bp.samplebpjsproject;
+package il.ac.bgu.cs.bp.samplebpjsproject.old;
 
 public class ThreadTest {
 

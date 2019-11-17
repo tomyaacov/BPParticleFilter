@@ -1,8 +1,6 @@
-package il.ac.bgu.cs.bp.samplebpjsproject;
+package il.ac.bgu.cs.bp.samplebpjsproject.old;
 
 import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.Multimap;
-import il.ac.bgu.cs.bp.bpjs.analysis.BThreadSnapshotVisitedStateStore;
 import il.ac.bgu.cs.bp.bpjs.analysis.DfsBProgramVerifier;
 import il.ac.bgu.cs.bp.bpjs.analysis.VerificationResult;
 import il.ac.bgu.cs.bp.bpjs.analysis.VisitedStateStore;
@@ -87,7 +85,7 @@ public class BPFilterVisitedStateStore implements VisitedStateStore, Serializabl
 //        }
 //    }
     public static void main(final String[] args) throws Exception {
-        String aResourceName = "example1.js";
+        String aResourceName = "old/example1.js";
         BProgram program = new ResourceBProgram(aResourceName);
         DfsBProgramVerifier vrf = new DfsBProgramVerifier();           // ... and a verifier
         vrf.setDebugMode(true);

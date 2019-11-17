@@ -1,4 +1,4 @@
-package il.ac.bgu.cs.bp.samplebpjsproject;
+package il.ac.bgu.cs.bp.samplebpjsproject.old;
 
 
 import il.ac.bgu.cs.bp.bpjs.execution.BProgramRunner;
@@ -7,6 +7,8 @@ import il.ac.bgu.cs.bp.bpjs.model.BEvent;
 import il.ac.bgu.cs.bp.bpjs.model.BProgram;
 import il.ac.bgu.cs.bp.bpjs.model.ResourceBProgram;
 import il.ac.bgu.cs.bp.bpjs.model.eventselection.SimpleEventSelectionStrategy;
+import il.ac.bgu.cs.bp.samplebpjsproject.ParticleFilterEventListener;
+import il.ac.bgu.cs.bp.samplebpjsproject.SimpleEventSelectionStrategyFilter;
 import org.apache.commons.lang3.StringUtils;
 import org.mozilla.javascript.NativeObject;
 
@@ -122,7 +124,7 @@ public class DrivingCarVisualization {
     }
 
     public static void main(final String[] args) throws InterruptedException {
-        String aResourceName = "driving_car_toy.js";
+        String aResourceName = "old/driving_car_toy.js";
         SimpleEventSelectionStrategyFilter ess = new SimpleEventSelectionStrategyFilter(new SimpleEventSelectionStrategy());
         BProgram externalBProgram = new ResourceBProgram(aResourceName, ess);
         BProgramRunner bProgramRunner = new BProgramRunner(externalBProgram);

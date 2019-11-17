@@ -119,7 +119,7 @@ public class ParticleFilter {
         BProgramSyncSnapshot initBProgramSyncSnapshot = bProgram.setup();
         BPSSList instance = new BPSSList(BPFilter.bpssListSize);
         try {
-            BProgramSyncSnapshot bProgramSyncSnapshot = initBProgramSyncSnapshot.start(executorService);// TODO: instance number should maybe be different
+            BProgramSyncSnapshot bProgramSyncSnapshot = initBProgramSyncSnapshot.start(executorService);
             instance.bProgramSyncSnapshots.set(BPFilter.bpssListSize-1, bProgramSyncSnapshot);
             return instance;
         } catch (InterruptedException e) {
@@ -131,6 +131,7 @@ public class ParticleFilter {
     public void mutate(){
         particles.stream().parallel().forEach(p ->{
             if(gen.nextFloat() < BPFilter.mutationProbability){
+                System.out.println(BPFilter.programStepCounter);
                 p.mutate(gen, executorService);
             }
         });
@@ -189,7 +190,7 @@ public class ParticleFilter {
         CSVUtils.writeResults(name + File.separator + "particleAnalysisTable.csv", BPFilter.particleAnalysisData);
     }
 
-    public static void run(int round, BPFilter bpFilter, String folderName) throws IOException{
+    public static void run(int round, BPFilter bpFilter, String folderName) throws IOException, InterruptedException{
         System.out.println("Starting round " + round + " ...");
         long startTime = System.currentTimeMillis();
 
@@ -198,6 +199,8 @@ public class ParticleFilter {
         ParticleFilter filter = new ParticleFilter(bpFilter.populationSize);
 
         BPFilter.programStepCounter = BPFilter.programStepCounter+BPFilter.evolutionResolution;
+
+        BPFilter.buildStatisticalModel(filter.gen, filter.executorService);
 
         for (int i=0; i < BPFilter.bpssList.size()/BPFilter.evolutionResolution-1; i++){
             filter.move();
@@ -262,15 +265,16 @@ public class ParticleFilter {
     public static void main(final String[] args) throws Exception {
         BPFilter bpFilter = new BPFilter();
         BPFilter.bpssListSize = 5;
-        BPFilter.populationSize = 2;
+        BPFilter.populationSize = 10;
         BPFilter.mutationProbability = 0.1;
         BPFilter.aResourceName = "driving_car.js";
         BPFilter.evolutionResolution = 1;
         BPFilter.fitnessNumOfIterations = 5;
         BPFilter.realityBased = true;
         BPFilter.simulationBased = true;
-        BPFilter.doMutation = false;
+        BPFilter.doMutation = true;
         BPFilter.debug = true;
+        BPFilter.statisticalModelNumOfIteration = 10000;
 
 
         String name = "results" + File.separator + new SimpleDateFormat("yyyyMMddHHmm").format(new Date());

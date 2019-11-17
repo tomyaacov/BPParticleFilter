@@ -216,7 +216,33 @@ public class BPSSList {
     }
 
     public void measurementProb(ExecutorService executorService){
-        probability = 0.5 * measurementProb1() + 0.5 * measurementProb2(executorService);
+        //probability = 0.5 * measurementProb1() + 0.5 * measurementProb2(executorService);
+        probability = measurementProbStatisticalModel();
+    }
+
+    public double measurementProbStatisticalModel(){
+        double mul, div;
+        double finalProb = 1.0;
+        for (int i = 0; i < bProgramSyncSnapshots.size(); i++) {
+            if (bProgramSyncSnapshots.get(i) == null) {
+                continue;
+            }
+            if (BPFilter.statisticalModel.containsKey(bProgramSyncSnapshots.get(i).hashCode())){
+                if (BPFilter.statisticalModel.get(bProgramSyncSnapshots.get(i).hashCode())
+                        .containsKey(BPFilter.eventList.get(BPFilter.programStepCounter - listSize + i).hashCode())){
+                    mul = BPFilter.statisticalModel.get(bProgramSyncSnapshots.get(i).hashCode())
+                            .get(BPFilter.eventList.get(BPFilter.programStepCounter - listSize + i).hashCode());
+                } else {
+                    mul = 1;
+                }
+                div = BPFilter.statisticalModel.get(bProgramSyncSnapshots.get(i).hashCode()).get(-1);
+            }else {
+                mul = 1.0;
+                div = 1.0;
+            }
+            finalProb *= (mul / div);
+        }
+        return finalProb;
     }
 
     public double measurementProbOld(ExecutorService executorService) {

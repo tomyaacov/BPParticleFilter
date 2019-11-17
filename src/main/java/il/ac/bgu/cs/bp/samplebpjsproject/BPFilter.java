@@ -12,21 +12,15 @@ import il.ac.bgu.cs.bp.bpjs.model.BProgramSyncSnapshot;
 
 import il.ac.bgu.cs.bp.bpjs.model.ResourceBProgram;
 import il.ac.bgu.cs.bp.bpjs.model.eventselection.EventSelectionResult;
-import il.ac.bgu.cs.bp.bpjs.model.eventselection.PrioritizedBSyncEventSelectionStrategy;
 import il.ac.bgu.cs.bp.bpjs.model.eventselection.SimpleEventSelectionStrategy;
-import io.jenetics.*;
-import io.jenetics.engine.Codec;
-import io.jenetics.engine.Engine;
-import io.jenetics.engine.EvolutionResult;
-import io.jenetics.engine.EvolutionStatistics;
-import io.jenetics.stat.DoubleMomentStatistics;
-import io.jenetics.stat.MinMax;
+import il.ac.bgu.cs.bp.samplebpjsproject.old.BPFilterVisitedStateStore;
+import il.ac.bgu.cs.bp.samplebpjsproject.old.IDDfsProgressListener;
 
-import java.io.File;
 import java.lang.reflect.Field;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.IntStream;
 
 public class BPFilter {
 
@@ -82,6 +76,10 @@ public class BPFilter {
 
     public static long seed;
 
+    public static Map<Integer, Map<Integer, Double>> statisticalModel;
+
+    public static int statisticalModelNumOfIteration;
+
     public static String particleAnalysisData = "";
 
     public static final AtomicInteger INSTANCE_COUNTER = new AtomicInteger();
@@ -105,6 +103,7 @@ public class BPFilter {
         maxFitness = new LinkedList<>();
         meanPopulationAccuracy = new LinkedList<>();
         bpssEstimatedList = new LinkedList<>();
+        statisticalModel = new HashMap<>();
         particleAnalysisData = "";
     }
 
@@ -177,6 +176,52 @@ public class BPFilter {
         }
         //System.out.println("Fitness");
         return finalFitness;
+    }
+
+    public static void buildStatisticalModel(Random gen, ExecutorService executorService) throws InterruptedException{
+        BPFilter.statisticalModel = new Hashtable<>();
+        SimpleEventSelectionStrategyFilter ess = new SimpleEventSelectionStrategyFilter(new SimpleEventSelectionStrategy(seed));
+        BProgram modelbProgram = new ResourceBProgram(aResourceName, ess);
+        BProgramSyncSnapshot initBProgramSyncSnapshot = bProgram.setup();
+        BProgramSyncSnapshot bProgramSyncSnapshot = initBProgramSyncSnapshot.start(executorService);
+        IntStream.range(0, BPFilter.fitnessNumOfIterations).forEach(value -> {
+            BProgramSyncSnapshot current = BProgramSyncSnapshotCloner.clone(bProgramSyncSnapshot);
+            while (true){
+                Set<BEvent> possibleEvents = modelbProgram.getEventSelectionStrategy().selectableEvents(current);
+                Optional<EventSelectionResult> res = modelbProgram.getEventSelectionStrategy().select(current, possibleEvents);
+                if (res.isPresent()) {
+                    EventSelectionResult esr = (EventSelectionResult) res.get();
+                    //System.out.println(esr.getEvent());
+                    final int bpssKey = current.hashCode();
+                    final int beventKey = esr.getEvent().hashCode();
+
+                    if (statisticalModel.containsKey(bpssKey)) {
+                        if (statisticalModel.get(bpssKey).containsKey(beventKey)){
+                            statisticalModel.get(bpssKey).put(-1, statisticalModel.get(bpssKey).get(-1) + 1.0);
+                            statisticalModel.get(bpssKey).put(beventKey, statisticalModel.get(bpssKey).get(beventKey) + 1.0);
+                        } else {
+                            statisticalModel.get(bpssKey).put(-1, statisticalModel.get(bpssKey).get(-1) + 1.0);
+                            statisticalModel.get(bpssKey).put(beventKey, 1.0);
+                        }
+                    }
+                    else {
+                        statisticalModel.put(bpssKey, new Hashtable<>());
+                        statisticalModel.get(bpssKey).put(-1, 1.0);
+                        statisticalModel.get(bpssKey).put(beventKey, 1.0);
+                    }
+                    try {
+                        current = current.triggerEvent(esr.getEvent(),
+                                executorService,
+                                new ArrayList<>());
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                } else {
+                    break;
+                }
+            }
+
+        });
     }
 
     public static void runOfflineModelChecking() throws Exception{

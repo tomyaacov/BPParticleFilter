@@ -1,5 +1,6 @@
 package il.ac.bgu.cs.bp.samplebpjsproject;
 
+import il.ac.bgu.cs.bp.bpjs.bprogramio.BProgramSyncSnapshotCloner;
 import il.ac.bgu.cs.bp.bpjs.internal.ExecutorServiceMaker;
 
 import java.util.concurrent.ExecutorService;
@@ -11,7 +12,7 @@ public class TestFitnessTime {
         int populationSize = 10;
         double mutationProbability = 0.3;
         BPFilter bpFilter = new BPFilter(populationSize, mutationProbability, bpssListSize);
-        BPFilter.aResourceName = "driving_car.js";
+        BPFilter.aResourceName = "test.js";
         BPFilter.evolutionResolution = 1;
         BPFilter.fitnessNumOfIterations = 100;
         BPFilter.realityBased = true;
@@ -19,6 +20,7 @@ public class TestFitnessTime {
         BPFilter.doMutation = false;
         BPFilter.seed = 1;
         BPFilter.debug = true;
+        BPFilter.statisticalModelNumOfIteration = 100;
 
         ExecutorService executorService = ExecutorServiceMaker.makeWithName("BProgramRunner-" + BPFilter.INSTANCE_COUNTER.incrementAndGet());
 
@@ -28,29 +30,31 @@ public class TestFitnessTime {
 
         ParticleFilter filter = new ParticleFilter(bpFilter.populationSize);
 
-        BPSSList particle = filter.newParticle();
+        BPFilter.buildStatisticalModel(filter.gen, filter.executorService);
 
-        particle.move(executorService);
-        BPFilter.programStepCounter = BPFilter.programStepCounter+BPFilter.evolutionResolution;
-        particle.move(executorService);
-        BPFilter.programStepCounter = BPFilter.programStepCounter+BPFilter.evolutionResolution;
-        particle.move(executorService);
-        BPFilter.programStepCounter = BPFilter.programStepCounter+BPFilter.evolutionResolution;
-        particle.move(executorService);
-        BPFilter.programStepCounter = BPFilter.programStepCounter+BPFilter.evolutionResolution;
-        particle.move(executorService);
-
-
-        long startTime = System.currentTimeMillis();
-        double fitness = particle.measurementProbOld(executorService);
-        long endTime = System.currentTimeMillis();
-        long timeElapsed = endTime - startTime;
-        System.out.println("Execution time in milliseconds: " + timeElapsed);
-
-        //double fitness = particle.measurementProb(executorService);
-
-        System.out.println(particle);
-        System.out.println(fitness);
+//        BPSSList particle = filter.newParticle();
+//
+//        particle.move(executorService);
+//        BPFilter.programStepCounter = BPFilter.programStepCounter+BPFilter.evolutionResolution;
+//        particle.move(executorService);
+//        BPFilter.programStepCounter = BPFilter.programStepCounter+BPFilter.evolutionResolution;
+//        particle.move(executorService);
+//        BPFilter.programStepCounter = BPFilter.programStepCounter+BPFilter.evolutionResolution;
+//        particle.move(executorService);
+//        BPFilter.programStepCounter = BPFilter.programStepCounter+BPFilter.evolutionResolution;
+//        particle.move(executorService);
+//
+//
+//        long startTime = System.currentTimeMillis();
+//        double fitness = particle.measurementProbOld(executorService);
+//        long endTime = System.currentTimeMillis();
+//        long timeElapsed = endTime - startTime;
+//        System.out.println("Execution time in milliseconds: " + timeElapsed);
+//
+//        //double fitness = particle.measurementProb(executorService);
+//
+//        System.out.println(particle);
+//        System.out.println(fitness);
 
 //        startTime = System.currentTimeMillis();
 //        fitness = particle.measurementProbNew(executorService);
@@ -62,16 +66,16 @@ public class TestFitnessTime {
 //        System.out.println(fitness);
 
 
-        System.out.println(particle.cloneFromIndex(0.1));
-        System.out.println(particle.cloneFromIndex(0.2));
-        System.out.println(particle.cloneFromIndex(0.3));
-        System.out.println(particle.cloneFromIndex(0.4));
-        System.out.println(particle.cloneFromIndex(0.5));
-        System.out.println(particle.cloneFromIndex(0.6));
-        System.out.println(particle.cloneFromIndex(0.7));
-        System.out.println(particle.cloneFromIndex(0.8));
-        System.out.println(particle.cloneFromIndex(0.9));
-        System.out.println(particle.cloneFromIndex(1.0));
+//        System.out.println(particle.cloneFromIndex(0.1));
+//        System.out.println(particle.cloneFromIndex(0.2));
+//        System.out.println(particle.cloneFromIndex(0.3));
+//        System.out.println(particle.cloneFromIndex(0.4));
+//        System.out.println(particle.cloneFromIndex(0.5));
+//        System.out.println(particle.cloneFromIndex(0.6));
+//        System.out.println(particle.cloneFromIndex(0.7));
+//        System.out.println(particle.cloneFromIndex(0.8));
+//        System.out.println(particle.cloneFromIndex(0.9));
+//        System.out.println(particle.cloneFromIndex(1.0));
 
 
         filter.shutdown();

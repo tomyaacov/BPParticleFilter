@@ -1,12 +1,12 @@
-package il.ac.bgu.cs.bp.samplebpjsproject;
+package il.ac.bgu.cs.bp.samplebpjsproject.old;
 
 import il.ac.bgu.cs.bp.bpjs.bprogramio.BProgramSyncSnapshotCloner;
 import il.ac.bgu.cs.bp.bpjs.internal.ExecutorServiceMaker;
 import il.ac.bgu.cs.bp.bpjs.model.BEvent;
 import il.ac.bgu.cs.bp.bpjs.model.BProgramSyncSnapshot;
 import il.ac.bgu.cs.bp.bpjs.model.eventselection.EventSelectionResult;
-import io.jenetics.AnyGene;
-import io.jenetics.Mutator;
+import il.ac.bgu.cs.bp.samplebpjsproject.BPFilter;
+import io.jenetics.*;
 
 import java.util.ArrayList;
 import java.util.Optional;
@@ -14,7 +14,7 @@ import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 
-public class BPSSListTransitionOperator extends Mutator<AnyGene<BPSSList>, Double> {
+public class BProgramSyncSnapshotTransitionOperator extends Mutator<AnyGene<BProgramSyncSnapshot>, Double> {
 
     private BPFilter bpFilter;
     private boolean realityBased;
@@ -44,9 +44,9 @@ public class BPSSListTransitionOperator extends Mutator<AnyGene<BPSSList>, Doubl
         this.simulationBased = simulationBased;
     }
 
-    AnyGene<BPSSList> gene = AnyGene.of(BPSSListTransitionOperator::newInstance);
+    AnyGene<BProgramSyncSnapshot> gene = AnyGene.of(BProgramSyncSnapshotTransitionOperator::newInstance);
 
-    public BPSSListTransitionOperator(BPFilter bpFilter, boolean realityBased, boolean simulationBased) {
+    public BProgramSyncSnapshotTransitionOperator(BPFilter bpFilter, boolean realityBased, boolean simulationBased) {
         super(1);
         this.bpFilter = bpFilter;
         this.realityBased = realityBased;
@@ -54,15 +54,14 @@ public class BPSSListTransitionOperator extends Mutator<AnyGene<BPSSList>, Doubl
     }
 
     @Override
-    protected AnyGene<BPSSList> mutate(AnyGene<BPSSList> gene, Random random) {
-        //BProgramSyncSnapshot newBProgramSyncSnapshot = getNextBProgramSyncSnapshot(gene.getAllele().getLast(), gene.getAllele().executorService);
-        BProgramSyncSnapshot newBProgramSyncSnapshot = getNextBProgramSyncSnapshot(gene.getAllele().getLast(), ExecutorServiceMaker.makeWithName("BProgramRunner-" + BPFilter.INSTANCE_COUNTER.incrementAndGet()));
-        BPSSList newCopy = gene.getAllele().cloneTransition(newBProgramSyncSnapshot);
-        return gene.newInstance(newCopy);
+    protected AnyGene<BProgramSyncSnapshot> mutate(AnyGene<BProgramSyncSnapshot> gene, Random random) {
+        BProgramSyncSnapshot newBProgramSyncSnapshot = getNextBProgramSyncSnapshot(gene.getAllele());
+        return gene.newInstance(newBProgramSyncSnapshot);
     }
 
-    private BProgramSyncSnapshot getNextBProgramSyncSnapshot(BProgramSyncSnapshot bProgramSyncSnapshot, ExecutorService executorService) {
+    private BProgramSyncSnapshot getNextBProgramSyncSnapshot(BProgramSyncSnapshot bProgramSyncSnapshot) {
         //TODO: Is this the right approach if we dont have it in possible events
+        ExecutorService executorService = ExecutorServiceMaker.makeWithName("BProgramRunner-" + 0);
         BProgramSyncSnapshot newBProgramSyncSnapshot = BProgramSyncSnapshotCloner.clone(bProgramSyncSnapshot);
         for(int j = 0; j < BPFilter.evolutionResolution; j++){
             Set<BEvent> possibleEvents = BPFilter.bProgram.getEventSelectionStrategy().selectableEvents(newBProgramSyncSnapshot);
@@ -116,7 +115,8 @@ public class BPSSListTransitionOperator extends Mutator<AnyGene<BPSSList>, Doubl
         return newBProgramSyncSnapshot;
     }
 
-    private static BPSSList newInstance(){
+    private static BProgramSyncSnapshot newInstance(){
         return null;//dummy
     }
+
 }

@@ -1,7 +1,8 @@
-package il.ac.bgu.cs.bp.samplebpjsproject;
+package il.ac.bgu.cs.bp.samplebpjsproject.old;
 
-import il.ac.bgu.cs.bp.bpjs.model.BProgramSyncSnapshot;
 import il.ac.bgu.cs.bp.bpjs.model.BThreadSyncSnapshot;
+import il.ac.bgu.cs.bp.samplebpjsproject.BPFilter;
+import il.ac.bgu.cs.bp.samplebpjsproject.BPSSList;
 import io.jenetics.AnyChromosome;
 import io.jenetics.AnyGene;
 import io.jenetics.Genotype;
@@ -12,7 +13,6 @@ import io.jenetics.engine.EvolutionStatistics;
 import io.jenetics.stat.DoubleMomentStatistics;
 import io.jenetics.stat.MinMax;
 
-import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.OptionalDouble;

@@ -1,15 +1,13 @@
-package il.ac.bgu.cs.bp.samplebpjsproject;
+package il.ac.bgu.cs.bp.samplebpjsproject.old;
 
 import il.ac.bgu.cs.bp.bpjs.bprogramio.BProgramSyncSnapshotCloner;
-import il.ac.bgu.cs.bp.bpjs.internal.ExecutorServiceMaker;
-import il.ac.bgu.cs.bp.bpjs.model.BEvent;
 import il.ac.bgu.cs.bp.bpjs.model.BProgramSyncSnapshot;
 import il.ac.bgu.cs.bp.bpjs.model.BThreadSyncSnapshot;
+import il.ac.bgu.cs.bp.samplebpjsproject.BPFilter;
 import io.jenetics.AnyGene;
 import io.jenetics.Mutator;
 
 import java.util.*;
-import java.util.concurrent.ExecutorService;
 
 public class BProgramSyncSnapshotMutation extends Mutator<AnyGene<BProgramSyncSnapshot>, Double> {
 

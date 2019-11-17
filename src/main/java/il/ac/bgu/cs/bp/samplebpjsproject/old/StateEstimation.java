@@ -1,6 +1,7 @@
-package il.ac.bgu.cs.bp.samplebpjsproject;
+package il.ac.bgu.cs.bp.samplebpjsproject.old;
 
 import il.ac.bgu.cs.bp.bpjs.model.BProgramSyncSnapshot;
+import il.ac.bgu.cs.bp.samplebpjsproject.BPSSList;
 import io.jenetics.AnyGene;
 import io.jenetics.engine.EvolutionResult;
 

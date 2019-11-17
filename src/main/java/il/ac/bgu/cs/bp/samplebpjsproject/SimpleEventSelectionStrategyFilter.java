@@ -1,7 +1,6 @@
 package il.ac.bgu.cs.bp.samplebpjsproject;
 
 import il.ac.bgu.cs.bp.bpjs.execution.BProgramRunner;
-import il.ac.bgu.cs.bp.bpjs.execution.listeners.PrintBProgramRunnerListener;
 import il.ac.bgu.cs.bp.bpjs.model.BEvent;
 import il.ac.bgu.cs.bp.bpjs.model.BProgram;
 import il.ac.bgu.cs.bp.bpjs.model.BProgramSyncSnapshot;
@@ -36,7 +35,7 @@ public class SimpleEventSelectionStrategyFilter implements EventSelectionStrateg
     }
 
     public static void main(final String[] args) throws InterruptedException {
-        String aResourceName = "example1.js";
+        String aResourceName = "old/example1.js";
         SimpleEventSelectionStrategyFilter ess = new SimpleEventSelectionStrategyFilter(new SimpleEventSelectionStrategy());
         BProgram externalBProgram = new ResourceBProgram(aResourceName, ess);
         BProgramRunner bProgramRunner = new BProgramRunner(externalBProgram);
