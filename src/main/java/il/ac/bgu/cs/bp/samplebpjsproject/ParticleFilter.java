@@ -55,6 +55,13 @@ public class ParticleFilter {
             return p.probability;
         }).sorted();
         double[] numArray = fitnessStream.toArray();
+        double sumOfWeights = DoubleStream.of(numArray).sum();
+        if (sumOfWeights == 0){
+            particles.stream().parallel().forEach(p -> p.probability = 1.0 / numParticles);
+        } else {
+            particles.stream().parallel().forEach(p -> p.probability = p.probability / sumOfWeights);
+        }
+
         meanFitness = DoubleStream.of(numArray).average().getAsDouble();
         int middle = numArray.length/2;
         if (numArray.length%2 == 1)
@@ -78,6 +85,7 @@ public class ParticleFilter {
                 index = circle(index + 1, numParticles);
             }
             new_particles.add(i, new BPSSList(particles.get(index)));
+            index = (int) (gen.nextFloat() * numParticles);
         }
         particles = new_particles;
         return best;
@@ -131,7 +139,7 @@ public class ParticleFilter {
     public void mutate(){
         particles.stream().parallel().forEach(p ->{
             if(gen.nextFloat() < BPFilter.mutationProbability){
-                System.out.println(BPFilter.programStepCounter);
+                //System.out.println(BPFilter.programStepCounter);
                 p.mutate(gen, executorService);
             }
         });
@@ -200,16 +208,14 @@ public class ParticleFilter {
 
         BPFilter.programStepCounter = BPFilter.programStepCounter+BPFilter.evolutionResolution;
 
-        BPFilter.buildStatisticalModel(filter.gen, filter.executorService);
+        //BPFilter.buildStatisticalModel(filter.gen, filter.executorService);
 
         for (int i=0; i < BPFilter.bpssList.size()/BPFilter.evolutionResolution-1; i++){
             filter.move();
-            if(i >= BPFilter.bpssListSize - 1){
-                if (BPFilter.doMutation){
-                    filter.mutate();
-                }
-                filter.calculateProb(filter.executorService);
+            if (BPFilter.doMutation){
+                filter.mutate();
             }
+            filter.calculateProb(filter.executorService);
             BPFilter.meanFitness.add(filter.meanFitness);
             BPFilter.medianFitness.add(filter.medianFitness);
             BPFilter.minFitness.add(filter.minFitness);
@@ -265,16 +271,16 @@ public class ParticleFilter {
     public static void main(final String[] args) throws Exception {
         BPFilter bpFilter = new BPFilter();
         BPFilter.bpssListSize = 5;
-        BPFilter.populationSize = 10;
+        BPFilter.populationSize = 100;
         BPFilter.mutationProbability = 0.1;
-        BPFilter.aResourceName = "driving_car.js";
+        BPFilter.aResourceName = "localization.js";
         BPFilter.evolutionResolution = 1;
         BPFilter.fitnessNumOfIterations = 5;
         BPFilter.realityBased = true;
         BPFilter.simulationBased = true;
         BPFilter.doMutation = true;
         BPFilter.debug = true;
-        BPFilter.statisticalModelNumOfIteration = 10000;
+        BPFilter.statisticalModelNumOfIteration = 1000;
 
 
         String name = "results" + File.separator + new SimpleDateFormat("yyyyMMddHHmm").format(new Date());

@@ -30,6 +30,7 @@ public class BPSSList {
             this.bProgramSyncSnapshots.add(null);
             this.eventArrayList.add(null);
         }
+        probability = 1;
         //executorService = ExecutorServiceMaker.makeWithName("BProgramRunner-" + BPFilter.INSTANCE_COUNTER.incrementAndGet());
     }
 
@@ -43,6 +44,7 @@ public class BPSSList {
         }
         this.bProgramSyncSnapshots.add(BProgramSyncSnapshotCloner.clone(bpssList.bProgramSyncSnapshots.get(listSize-1)));
         this.eventArrayList.add(bpssList.eventArrayList.get(listSize-1));
+        probability = bpssList.probability;
         //executorService = ExecutorServiceMaker.makeWithName("BProgramRunner-" + BPFilter.INSTANCE_COUNTER.incrementAndGet());
     }
 
@@ -217,7 +219,13 @@ public class BPSSList {
 
     public void measurementProb(ExecutorService executorService){
         //probability = 0.5 * measurementProb1() + 0.5 * measurementProb2(executorService);
-        probability = measurementProbStatisticalModel();
+        //probability = measurementProbStatisticalModel();
+        Set<BEvent> possibleEvents = BPFilter.bProgram.getEventSelectionStrategy().selectableEvents(getLast());
+        if(possibleEvents.contains(BPFilter.eventList.get(BPFilter.programStepCounter))){
+            probability *= 1.0/(possibleEvents.size());
+        } else {
+            probability = 0.0;
+        }
     }
 
     public double measurementProbStatisticalModel(){

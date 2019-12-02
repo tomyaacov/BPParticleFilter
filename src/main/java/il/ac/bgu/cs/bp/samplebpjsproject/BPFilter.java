@@ -184,7 +184,8 @@ public class BPFilter {
         BProgram modelbProgram = new ResourceBProgram(aResourceName, ess);
         BProgramSyncSnapshot initBProgramSyncSnapshot = bProgram.setup();
         BProgramSyncSnapshot bProgramSyncSnapshot = initBProgramSyncSnapshot.start(executorService);
-        IntStream.range(0, BPFilter.fitnessNumOfIterations).forEach(value -> {
+        IntStream.range(0, BPFilter.statisticalModelNumOfIteration).forEach(value -> {
+
             BProgramSyncSnapshot current = BProgramSyncSnapshotCloner.clone(bProgramSyncSnapshot);
             while (true){
                 Set<BEvent> possibleEvents = modelbProgram.getEventSelectionStrategy().selectableEvents(current);
