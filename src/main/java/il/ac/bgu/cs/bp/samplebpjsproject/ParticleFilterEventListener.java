@@ -8,15 +8,16 @@ import il.ac.bgu.cs.bp.bpjs.model.FailedAssertion;
 
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Random;
 
 
 public class ParticleFilterEventListener implements BProgramRunnerListener {
 
-    public List<BEvent> eventList;
+    public List<BEvent> observationList;
+    public List<BEvent> stateList;
 
     public ParticleFilterEventListener() {
-        this.eventList = new LinkedList<>();
+        this.stateList = new LinkedList<>();
+        this.observationList = new LinkedList<>();
     }
 
 
@@ -61,7 +62,12 @@ public class ParticleFilterEventListener implements BProgramRunnerListener {
 
     @Override
     public void eventSelected(BProgram bProgram, BEvent bEvent) {
-        eventList.add(bEvent);
+        if (bEvent.name.equals("State")){
+            stateList.add(bEvent);
+        }
+        if (bEvent.name.equals("Observation")) {
+            observationList.add(bEvent);
+        }
     }
 
     @Override

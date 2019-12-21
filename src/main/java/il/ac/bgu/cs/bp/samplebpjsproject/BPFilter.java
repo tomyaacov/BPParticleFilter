@@ -40,11 +40,11 @@ public class BPFilter {
 
     public static BProgramRunner bProgramRunner;
 
-    public static List<BEvent> eventList;
+    public static List<BEvent> observationList;
 
-    public static List<BProgramSyncSnapshot> bpssList;
+    public static List<BEvent> stateList = new LinkedList<>();
 
-    public static List<BProgramSyncSnapshot> bpssEstimatedList = new LinkedList<>();
+    public static List<BEvent> stateEstimatedList = new LinkedList<>();
 
     public static List<Double> meanFitness = new LinkedList<>();
 
@@ -102,7 +102,7 @@ public class BPFilter {
         minFitness = new LinkedList<>();
         maxFitness = new LinkedList<>();
         meanPopulationAccuracy = new LinkedList<>();
-        bpssEstimatedList = new LinkedList<>();
+        stateEstimatedList = new LinkedList<>();
         statisticalModel = new HashMap<>();
         particleAnalysisData = "";
     }
@@ -118,8 +118,8 @@ public class BPFilter {
         bProgramRunner.addListener(particleFilterEventListener);
         externalBProgram.setWaitForExternalEvents(false);
         bProgramRunner.run();
-        eventList = particleFilterEventListener.eventList;
-        bpssList = ess.bProgramSyncSnapshotList;
+        observationList = particleFilterEventListener.observationList;
+        stateList = particleFilterEventListener.stateList;
         //List<List<String>> states = DrivingCarVisualization.getStatesVisualization(eventList);
         bProgram = new ResourceBProgram(aResourceName);
     }
@@ -153,7 +153,7 @@ public class BPFilter {
                 Optional<EventSelectionResult> res = bProgram.getEventSelectionStrategy().select(cur, possibleEvents);
                 if (res.isPresent()) {
                     EventSelectionResult esr = (EventSelectionResult)res.get();
-                    if(esr.getEvent().equals(eventList.get(programStepCounter+j))){
+                    if(esr.getEvent().equals(observationList.get(programStepCounter+j))){
                         fitness.set(j,fitness.get(j)+1.0);
                     }
                     try {
@@ -177,6 +177,7 @@ public class BPFilter {
         //System.out.println("Fitness");
         return finalFitness;
     }
+
 
     public static void buildStatisticalModel(Random gen, ExecutorService executorService) throws InterruptedException{
         BPFilter.statisticalModel = new Hashtable<>();

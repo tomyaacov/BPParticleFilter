@@ -19,12 +19,12 @@ public class SimpleEventSelectionStrategyFilter implements EventSelectionStrateg
 
     public SimpleEventSelectionStrategyFilter(EventSelectionStrategy eventSelectionStrategy) {
         this.eventSelectionStrategy = eventSelectionStrategy;
-        bProgramSyncSnapshotList = new LinkedList<>();
+        //bProgramSyncSnapshotList = new LinkedList<>();
     }
 
     @Override
     public Set<BEvent> selectableEvents(BProgramSyncSnapshot bProgramSyncSnapshot) {
-        bProgramSyncSnapshotList.add(bProgramSyncSnapshot);
+        //bProgramSyncSnapshotList.add(bProgramSyncSnapshot);
         //System.out.println(bProgramSyncSnapshot.hashCode());
         return eventSelectionStrategy.selectableEvents(bProgramSyncSnapshot);
     }

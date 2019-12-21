@@ -1,49 +1,73 @@
-const width = 10;
-const height = 10;
-const numOfSteps = 10;
+importPackage(java.util);
+const width = 20;
+const height = 20;
+const numOfSteps = 100;
+const observation_std = 2;
+const rand = new Random();
 
-walls = [{orientation:"S", x: 5, y: 7},
-        {orientation:"N", x: 5, y: 8},
-    {orientation:"S", x: 6, y: 7},
-    {orientation:"N", x: 6, y: 8},
-    {orientation:"S", x: 7, y: 7},
-    {orientation:"N", x: 7, y: 8},
-    {orientation:"S", x: 8, y: 7},
-    {orientation:"N", x: 8, y: 8},
-    {orientation:"S", x: 9, y: 7},
-    {orientation:"N", x: 9, y: 8},
-    {orientation:"E", x: 2, y: 9},
-    {orientation:"W", x: 3, y: 9},
-    {orientation:"E", x: 2, y: 8},
-    {orientation:"W", x: 3, y: 8},
-    {orientation:"E", x: 2, y: 7},
-    {orientation:"W", x: 3, y: 7},
-    {orientation:"E", x: 3, y: 0},
-    {orientation:"W", x: 4, y: 0},
-    {orientation:"E", x: 3, y: 1},
-    {orientation:"W", x: 4, y: 1},
-    {orientation:"S", x: 4, y: 1},
-    {orientation:"N", x: 4, y: 2},
-    {orientation:"E", x: 4, y: 2},
-    {orientation:"W", x: 5, y: 2},
-    {orientation:"E", x: 4, y: 3},
-    {orientation:"W", x: 5, y: 3},
-    {orientation:"E", x: 4, y: 4},
-    {orientation:"W", x: 5, y: 4}];
+const Observations = bp.EventSet("Observations", function(evt) {return evt.name == "Observation"});
+const States = bp.EventSet("States", function(evt) {return evt.name == "State"});
+const Moves = bp.EventSet("Moves", function(evt) {return evt.name == "Move"});
 
-Observations = bp.EventSet("Observations", function(evt) {return evt.name == "Observation"});
-States = bp.EventSet("States", function(evt) {return evt.name == "State"});
-Moves = bp.EventSet("Moves", function(evt) {return evt.name == "Move"});
+
+const map =
+    [
+        "   |       |           |       |       ",
+        "                                       ",
+        "   |       |           |       |       ",
+        "    -                   -              ",
+        "   |       |           |       |       ",
+        "        - -                 - -        ",
+        "           |                   |       ",
+        "                                       ",
+        "           |                   |       ",
+        "- - -               - - -              ",
+        "                                       ",
+        "                                       ",
+        "       |                   |           ",
+        "        - - - -             - - - -    ",
+        "       |                   |           ",
+        "                                       ",
+        "       |                   |           ",
+        "                                       ",
+        "               |                   |   ",
+    ];
+
+const walls = generateWalls();
+
+function generateInnerWalls(){
+    let ans = [];
+    for (var i = 0; i < map.length; i++) {
+        for (var j = 0; j < map[i].length; j++) {
+            if (map[i].charAt(j) == "|"){
+                ans.push({orientation:"E", x: (j-1)/2, y: i/2});
+                ans.push({orientation:"W", x: (j+1)/2, y: i/2});
+            }
+            if (map[i].charAt(j) == "-"){
+                ans.push({orientation:"S", x: j/2, y: (i-1)/2});
+                ans.push({orientation:"N", x: j/2, y: (i+1)/2});
+            }
+        }
+    }
+    return ans;
+}
 
 function generateWalls(){
+    let ans = generateInnerWalls();
     for (var i = 0; i < width; i++) {
-        walls.push({orientation:"N", x: i, y: 0});
-        walls.push({orientation:"S", x: i, y: height-1});
+        ans.push({orientation:"N", x: i, y: 0});
+        ans.push({orientation:"S", x: i, y: height-1});
     }
     for (var i = 0; i < height; i++) {
-        walls.push({orientation:"W", x: 0, y: i});
-        walls.push({orientation:"E", x: width-1, y: i});
+        ans.push({orientation:"W", x: 0, y: i});
+        ans.push({orientation:"E", x: width-1, y: i});
     }
+    return ans;
+}
+
+function nextGaussian() {
+    let initial_val = rand.nextGaussian() * observation_std;
+    return Math.round(initial_val);
 }
 
 function nextState(state, move) {
@@ -60,32 +84,9 @@ function nextState(state, move) {
 }
 
 function nextObservation(state) {
-    // illegalObservations = walls.filter(function(wall) {
-    //     return wall.x == state.data.x && wall.y == state.data.y;
-    // }).map(function (wall) {
-    //     switch(wall.orientation) {
-    //         case "N":
-    //             return bp.Event("Observation", {x:state.data.x, y:state.data.y-1});
-    //         case "S":
-    //             return bp.Event("Observation", {x:state.data.x, y:state.data.y+1});
-    //         case "W":
-    //             return bp.Event("Observation", {x:state.data.x-1, y:state.data.y});
-    //         default:
-    //             return bp.Event("Observation", {x:state.data.x+1, y:state.data.y});
-    //     }
-    // });
-    // allObservations = [bp.Event("Observation", {x:state.data.x-1, y:state.data.y}),
-    //     bp.Event("Observation", {x:state.data.x+1, y:state.data.y}),
-    //     bp.Event("Observation", {x:state.data.x, y:state.data.y-1}),
-    //     bp.Event("Observation", {x:state.data.x, y:state.data.y+1}),
-    //     bp.Event("Observation", {x:state.data.x, y:state.data.y})];
-    // bp.log.info(typeof illegalObservations);
-    // return allObservations.filter(x => !illegalObservations.includes(x))
-    return [bp.Event("Observation", {x:state.data.x-1, y:state.data.y}),
-         bp.Event("Observation", {x:state.data.x+1, y:state.data.y}),
-         bp.Event("Observation", {x:state.data.x, y:state.data.y-1}),
-         bp.Event("Observation", {x:state.data.x, y:state.data.y+1}),
-         bp.Event("Observation", {x:state.data.x, y:state.data.y})];
+    let dx = nextGaussian();
+    let dy = nextGaussian();
+    return bp.Event("Observation", {x:state.x+dx, y:state.y+dy});
 }
 
 bp.registerBThread("Interleave", function() {
@@ -100,9 +101,9 @@ bp.registerBThread("Interleave", function() {
 });
 
 bp.registerBThread("State", function() {
-    s = bp.sync( {request:bp.Event("State", {x:0, y:0})});
+    let s = bp.sync( {request:bp.Event("State", {x:rand.nextInt(width), y:rand.nextInt(height)})});
     while (true){
-        m = bp.sync( {waitFor:Moves});
+        let m = bp.sync( {waitFor:Moves});
         s = nextState(s, m);
         bp.sync( {request:s});
     }
@@ -110,7 +111,7 @@ bp.registerBThread("State", function() {
 
 bp.registerBThread("Observation", function() {
     while (true){
-        s = bp.sync( {waitFor:States});
+        let s = bp.sync( {waitFor:States}).data;
         o = nextObservation(s);
         bp.sync( {request:o});
     }
@@ -118,7 +119,6 @@ bp.registerBThread("Observation", function() {
 
 bp.registerBThread("Move", function() {
     while (true){
-        bp.sync( {waitFor:States});
         bp.sync( {request:[bp.Event("Move", {orientation:"N"}),
                 bp.Event("Move", {orientation:"S"}),
                 bp.Event("Move", {orientation:"W"}),
@@ -127,10 +127,9 @@ bp.registerBThread("Move", function() {
 });
 
 bp.registerBThread("WallsFilter", function() {
-    generateWalls();
     while (true){
-        s = bp.sync( {waitFor:States});
-        illegalMoves = walls.filter(function(wall) {
+        let s = bp.sync( {waitFor:States});
+        let illegalMoves = walls.filter(function(wall) {
             return wall.x == s.data.x && wall.y == s.data.y;
         }).map(function (wall) {
             return bp.Event("Move", {orientation:wall.orientation})

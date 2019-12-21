@@ -1,10 +1,7 @@
 package il.ac.bgu.cs.bp.samplebpjsproject;
 
 import il.ac.bgu.cs.bp.bpjs.internal.ExecutorServiceMaker;
-import il.ac.bgu.cs.bp.bpjs.model.BProgram;
-import il.ac.bgu.cs.bp.bpjs.model.BProgramSyncSnapshot;
-import il.ac.bgu.cs.bp.bpjs.model.BThreadSyncSnapshot;
-import il.ac.bgu.cs.bp.bpjs.model.ResourceBProgram;
+import il.ac.bgu.cs.bp.bpjs.model.*;
 import il.ac.bgu.cs.bp.bpjs.model.eventselection.SimpleEventSelectionStrategy;
 
 import java.io.File;
@@ -16,7 +13,6 @@ import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 import java.util.stream.DoubleStream;
-import java.util.stream.IntStream;
 
 public class ParticleFilter {
 
@@ -55,12 +51,12 @@ public class ParticleFilter {
             return p.probability;
         }).sorted();
         double[] numArray = fitnessStream.toArray();
-        double sumOfWeights = DoubleStream.of(numArray).sum();
-        if (sumOfWeights == 0){
-            particles.stream().parallel().forEach(p -> p.probability = 1.0 / numParticles);
-        } else {
-            particles.stream().parallel().forEach(p -> p.probability = p.probability / sumOfWeights);
-        }
+        probabilitiesSum = DoubleStream.of(numArray).sum();
+//        if (sumOfWeights == 0){
+//            particles.stream().parallel().forEach(p -> p.probability = 1.0 / numParticles);
+//        } else {
+//            particles.stream().parallel().forEach(p -> p.probability = p.probability / sumOfWeights);
+//        }
 
         meanFitness = DoubleStream.of(numArray).average().getAsDouble();
         int middle = numArray.length/2;
@@ -148,20 +144,20 @@ public class ParticleFilter {
     public void addPopulationMeanAccuracy(){
 
         BPFilter.meanPopulationAccuracy.add(particles.stream().parallel().mapToDouble(p ->{
-            return p.getLast().equals(BPFilter.bpssList.get(BPFilter.programStepCounter)) ? 1.0 : 0.0;
+            return p.getLast().equals(BPFilter.stateList.get(BPFilter.programStepCounter)) ? 1.0 : 0.0;
         }).average().getAsDouble());
     }
 
-    public void generateParticleAnalysisTable(int round, String folderName) throws IOException{
-        String name = folderName + File.separator + round;
-        String data = particles.stream().parallel().map(p -> {
-            return String.valueOf(BPFilter.programStepCounter) + ","
-                    + p.probability + ","
-                    + (p.getLast().equals(BPFilter.bpssList.get(BPFilter.programStepCounter)) ? "1" : "0") + ","
-                    + btAccuray(p.getLast(), BPFilter.bpssList.get(BPFilter.programStepCounter));
-        }).collect( Collectors.joining( System.lineSeparator() ) );
-        BPFilter.particleAnalysisData = BPFilter.particleAnalysisData + data + System.lineSeparator();
-    }
+//    public void generateParticleAnalysisTable(int round, String folderName) throws IOException{
+//        String name = folderName + File.separator + round;
+//        String data = particles.stream().parallel().map(p -> {
+//            return String.valueOf(BPFilter.programStepCounter) + ","
+//                    + p.probability + ","
+//                    + (p.getLast().equals(BPFilter.stateList.get(BPFilter.programStepCounter)) ? "1" : "0") + ","
+//                    + btAccuray(p.getLast(), BPFilter.stateList.get(BPFilter.programStepCounter));
+//        }).collect( Collectors.joining( System.lineSeparator() ) );
+//        BPFilter.particleAnalysisData = BPFilter.particleAnalysisData + data + System.lineSeparator();
+//    }
 
     public static double btAccuray(BProgramSyncSnapshot a, BProgramSyncSnapshot b){
         int count = 0;
@@ -178,6 +174,18 @@ public class ParticleFilter {
             }
         }
         return (double)count/bpssSize;
+    }
+
+    public BEvent predict(){
+        OptionalDouble mean_x = particles
+                .stream()
+                .mapToDouble(p -> 1.0)//TODO: change
+                .average();
+        OptionalDouble mean_y = particles
+                .stream()
+                .mapToDouble(p -> 1.0)//TODO: change
+                .average();
+        return new BEvent("State");//TODO: change
     }
 
     public void shutdown(){
@@ -210,7 +218,7 @@ public class ParticleFilter {
 
         //BPFilter.buildStatisticalModel(filter.gen, filter.executorService);
 
-        for (int i=0; i < BPFilter.bpssList.size()/BPFilter.evolutionResolution-1; i++){
+        for (int i = 0; i < BPFilter.stateList.size()/BPFilter.evolutionResolution-1; i++){
             filter.move();
             if (BPFilter.doMutation){
                 filter.mutate();
@@ -220,26 +228,26 @@ public class ParticleFilter {
             BPFilter.medianFitness.add(filter.medianFitness);
             BPFilter.minFitness.add(filter.minFitness);
             BPFilter.maxFitness.add(filter.maxFitness);
-            filter.addPopulationMeanAccuracy();
-            if (BPFilter.debug){
-                filter.generateParticleAnalysisTable(round, folderName);
-            }
+//            filter.addPopulationMeanAccuracy();
+//            if (BPFilter.debug){
+//                filter.generateParticleAnalysisTable(round, folderName);
+//            }
             BPFilter.programStepCounter = BPFilter.programStepCounter+BPFilter.evolutionResolution;
             BPSSList estimation = filter.resample();
-            BPFilter.bpssEstimatedList.add(estimation.getLast());
+            BPFilter.stateEstimatedList.add(filter.predict());
 
         }
         filter.shutdown();
 
-        BPFilter.estimationAccuracy = new ArrayList<>();
-        for (int i = 0; i < BPFilter.bpssEstimatedList.size(); i++){
-            BPFilter.estimationAccuracy.add(BPFilter.bpssEstimatedList.get(i).equals(BPFilter.bpssList.get(BPFilter.evolutionResolution *(i+1))) ? 1.0 : 0.0);
-        }
-        BPFilter.estimationBtAccuracy = new ArrayList<>();
-        for (int i = 0; i < BPFilter.bpssEstimatedList.size(); i++){
-            BPFilter.estimationBtAccuracy.add(btAccuray(BPFilter.bpssList.get(BPFilter.evolutionResolution *(i+1)),
-                    BPFilter.bpssEstimatedList.get(i)));
-        }
+//        BPFilter.estimationAccuracy = new ArrayList<>();
+//        for (int i = 0; i < BPFilter.stateEstimatedList.size(); i++){
+//            BPFilter.estimationAccuracy.add(BPFilter.stateEstimatedList.get(i).equals(BPFilter.stateList.get(BPFilter.evolutionResolution *(i+1))) ? 1.0 : 0.0);
+//        }
+//        BPFilter.estimationBtAccuracy = new ArrayList<>();
+//        for (int i = 0; i < BPFilter.stateEstimatedList.size(); i++){
+//            BPFilter.estimationBtAccuracy.add(btAccuray(BPFilter.stateList.get(BPFilter.evolutionResolution *(i+1)),
+//                    BPFilter.stateEstimatedList.get(i)));
+//        }
 
         if (BPFilter.debug) {
             OptionalDouble average = BPFilter.estimationAccuracy
@@ -271,14 +279,14 @@ public class ParticleFilter {
     public static void main(final String[] args) throws Exception {
         BPFilter bpFilter = new BPFilter();
         BPFilter.bpssListSize = 5;
-        BPFilter.populationSize = 100;
+        BPFilter.populationSize = 10;
         BPFilter.mutationProbability = 0.1;
         BPFilter.aResourceName = "localization.js";
         BPFilter.evolutionResolution = 1;
         BPFilter.fitnessNumOfIterations = 5;
         BPFilter.realityBased = true;
         BPFilter.simulationBased = true;
-        BPFilter.doMutation = true;
+        BPFilter.doMutation = false;
         BPFilter.debug = true;
         BPFilter.statisticalModelNumOfIteration = 1000;
 

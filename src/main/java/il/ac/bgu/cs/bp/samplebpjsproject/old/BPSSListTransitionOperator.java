@@ -69,7 +69,7 @@ public class BPSSListTransitionOperator extends Mutator<AnyGene<BPSSList>, Doubl
         for(int j = 0; j < BPFilter.evolutionResolution; j++){
             Set<BEvent> possibleEvents = BPFilter.bProgram.getEventSelectionStrategy().selectableEvents(newBProgramSyncSnapshot);
             if (realityBased){
-                if(possibleEvents.contains(BPFilter.eventList.get(BPFilter.programStepCounter-BPFilter.evolutionResolution+j))){
+                if(possibleEvents.contains(BPFilter.observationList.get(BPFilter.programStepCounter-BPFilter.evolutionResolution+j))){
                     newBProgramSyncSnapshot = triggerFromReality(executorService, newBProgramSyncSnapshot, j);
                 } else {
                     if (simulationBased){
@@ -90,7 +90,7 @@ public class BPSSListTransitionOperator extends Mutator<AnyGene<BPSSList>, Doubl
     private BProgramSyncSnapshot triggerFromReality(ExecutorService executorService, BProgramSyncSnapshot newBProgramSyncSnapshot, int j) {
         try {
             newBProgramSyncSnapshot = newBProgramSyncSnapshot.triggerEvent(
-                    BPFilter.eventList.get(BPFilter.programStepCounter-BPFilter.evolutionResolution+j),
+                    BPFilter.observationList.get(BPFilter.programStepCounter-BPFilter.evolutionResolution+j),
                     executorService,
                     new ArrayList<>()); // dummy
         } catch (InterruptedException e) {

@@ -1,10 +1,13 @@
 package il.ac.bgu.cs.bp.samplebpjsproject;
 
 import il.ac.bgu.cs.bp.bpjs.bprogramio.BProgramSyncSnapshotCloner;
-import il.ac.bgu.cs.bp.bpjs.internal.ExecutorServiceMaker;
 import il.ac.bgu.cs.bp.bpjs.model.BEvent;
 import il.ac.bgu.cs.bp.bpjs.model.BProgramSyncSnapshot;
 import il.ac.bgu.cs.bp.bpjs.model.eventselection.EventSelectionResult;
+
+import org.apache.commons.math.MathException;
+import org.apache.commons.math.distribution.NormalDistributionImpl;
+import org.mozilla.javascript.NativeObject;
 
 import java.util.*;
 import java.util.concurrent.ExecutorService;
@@ -52,6 +55,10 @@ public class BPSSList {
         return this.bProgramSyncSnapshots.get(this.bProgramSyncSnapshots.size() - 1);
     }
 
+    public BEvent getLastState() {
+        return this.eventArrayList.get(this.eventArrayList.size() - 1);
+    }
+
     public BPSSList cloneFrom(double r) {
         double a = 0.0;
         int n = bProgramSyncSnapshots.size() - 1;
@@ -91,27 +98,36 @@ public class BPSSList {
     }
 
     public void move(ExecutorService executorService) {
-        BProgramSyncSnapshot newBProgramSyncSnapshot = null;
-        Set<BEvent> possibleEvents = BPFilter.bProgram.getEventSelectionStrategy().selectableEvents(this.getLast());
-        if (BPFilter.realityBased) {
-            if (possibleEvents.contains(BPFilter.eventList.get(BPFilter.programStepCounter - BPFilter.evolutionResolution))) {
-                newBProgramSyncSnapshot = this.triggerFromReality(executorService, this.getLast());
-            } else {
-                if (BPFilter.simulationBased) {
-                    newBProgramSyncSnapshot = this.triggerFromSimulation(executorService, this.getLast(), possibleEvents);
-                }
-            }
-        } else {
+//        Old
+//        BProgramSyncSnapshot newBProgramSyncSnapshot = null;
+//        Set<BEvent> possibleEvents = BPFilter.bProgram.getEventSelectionStrategy().selectableEvents(this.getLast());
+//        if (BPFilter.realityBased) {
+//            if (possibleEvents.contains(BPFilter.observationList.get(BPFilter.programStepCounter - BPFilter.evolutionResolution))) {
+//                newBProgramSyncSnapshot = this.triggerFromReality(executorService, this.getLast());
+//            } else {
+//                if (BPFilter.simulationBased) {
+//                    newBProgramSyncSnapshot = this.triggerFromSimulation(executorService, this.getLast(), possibleEvents);
+//                }
+//            }
+//        } else {
+//            newBProgramSyncSnapshot = this.triggerFromSimulation(executorService, this.getLast(), possibleEvents);
+//        }
+        while (true){
+            BProgramSyncSnapshot newBProgramSyncSnapshot = null;
+            Set<BEvent> possibleEvents = BPFilter.bProgram.getEventSelectionStrategy().selectableEvents(this.getLast());
             newBProgramSyncSnapshot = this.triggerFromSimulation(executorService, this.getLast(), possibleEvents);
+            for (int i = 1; i < bProgramSyncSnapshots.size(); i++) {
+                if (bProgramSyncSnapshots.get(i) == null) {
+                    continue;
+                }
+                bProgramSyncSnapshots.set(i - 1, bProgramSyncSnapshots.get(i));
+            }
+            bProgramSyncSnapshots.set(bProgramSyncSnapshots.size() - 1, newBProgramSyncSnapshot);
+            if (eventArrayList.get(eventArrayList.size()-1).name.equals("State")){
+                break;
+            }
         }
 
-        for (int i = 1; i < bProgramSyncSnapshots.size(); i++) {
-            if (bProgramSyncSnapshots.get(i) == null) {
-                continue;
-            }
-            bProgramSyncSnapshots.set(i - 1, bProgramSyncSnapshots.get(i));
-        }
-        bProgramSyncSnapshots.set(bProgramSyncSnapshots.size() - 1, newBProgramSyncSnapshot);
 
     }
 
@@ -119,7 +135,7 @@ public class BPSSList {
         BProgramSyncSnapshot newBProgramSyncSnapshot = null;
         try {
             newBProgramSyncSnapshot = bProgramSyncSnapshot.triggerEvent(
-                    BPFilter.eventList.get(BPFilter.programStepCounter - BPFilter.evolutionResolution),
+                    BPFilter.observationList.get(BPFilter.programStepCounter - BPFilter.evolutionResolution),
                     executorService,
                     new ArrayList<>()); // dummy
         } catch (InterruptedException e) {
@@ -131,7 +147,7 @@ public class BPSSList {
             }
             eventArrayList.set(i - 1, eventArrayList.get(i));
         }
-        eventArrayList.set(bProgramSyncSnapshots.size() - 1, BPFilter.eventList.get(BPFilter.programStepCounter - BPFilter.evolutionResolution));
+        eventArrayList.set(bProgramSyncSnapshots.size() - 1, BPFilter.observationList.get(BPFilter.programStepCounter - BPFilter.evolutionResolution));
         return newBProgramSyncSnapshot;
     }
 
@@ -184,7 +200,7 @@ public class BPSSList {
                 eventList.add(new BEvent("dummy"));
                 continue;
             }
-            eventList.add(BPFilter.eventList.get(BPFilter.programStepCounter - listSize + i));
+            eventList.add(BPFilter.observationList.get(BPFilter.programStepCounter - listSize + i));
         }
         return compareEventLists(eventArrayList, eventList);
     }
@@ -220,11 +236,40 @@ public class BPSSList {
     public void measurementProb(ExecutorService executorService){
         //probability = 0.5 * measurementProb1() + 0.5 * measurementProb2(executorService);
         //probability = measurementProbStatisticalModel();
-        Set<BEvent> possibleEvents = BPFilter.bProgram.getEventSelectionStrategy().selectableEvents(getLast());
-        if(possibleEvents.contains(BPFilter.eventList.get(BPFilter.programStepCounter))){
-            probability *= 1.0/(possibleEvents.size());
-        } else {
-            probability = 0.0;
+//        Old
+//        Set<BEvent> possibleEvents = BPFilter.bProgram.getEventSelectionStrategy().selectableEvents(getLast());
+//        if(possibleEvents.contains(BPFilter.observationList.get(BPFilter.programStepCounter))){
+//            probability *= 1.0/(possibleEvents.size());
+//        } else {
+//            probability = 0.0;
+//        }
+        BEvent observation = BPFilter.observationList.get(BPFilter.programStepCounter-1);
+        BEvent state = this.getLastState();
+        System.out.println(state.getData());
+        Object state_x = ((NativeObject)state.getData()).get("x");
+        Object state_y = ((NativeObject)state.getData()).get("y");
+        Object observation_x = ((NativeObject)observation.getData()).get("x");
+        Object observation_y = ((NativeObject)observation.getData()).get("y");
+        if(state_x instanceof Integer){
+            state_x = ((Integer)state_x).doubleValue();
+        }
+        if(state_y instanceof Integer){
+            state_y = ((Integer)state_y).doubleValue();
+        }
+        if(observation_x instanceof Integer){
+            observation_x = ((Integer)observation_x).doubleValue();
+        }
+        if(state_y instanceof Integer){
+            observation_y = ((Integer)observation_y).doubleValue();
+        }
+        double dx = ((Double)observation_x)-((Double)state_x);
+        double dy = ((Double)observation_y)-((Double)state_y);
+
+        try {
+            probability *= (new NormalDistributionImpl(0, 2).cumulativeProbability(dx-0.5,dx+0.5)*
+                            new NormalDistributionImpl(0, 2).cumulativeProbability(dy-0.5,dy+0.5));
+        } catch (MathException e) {
+            e.printStackTrace();
         }
     }
 
@@ -237,9 +282,9 @@ public class BPSSList {
             }
             if (BPFilter.statisticalModel.containsKey(bProgramSyncSnapshots.get(i).hashCode())){
                 if (BPFilter.statisticalModel.get(bProgramSyncSnapshots.get(i).hashCode())
-                        .containsKey(BPFilter.eventList.get(BPFilter.programStepCounter - listSize + i).hashCode())){
+                        .containsKey(BPFilter.observationList.get(BPFilter.programStepCounter - listSize + i).hashCode())){
                     mul = BPFilter.statisticalModel.get(bProgramSyncSnapshots.get(i).hashCode())
-                            .get(BPFilter.eventList.get(BPFilter.programStepCounter - listSize + i).hashCode());
+                            .get(BPFilter.observationList.get(BPFilter.programStepCounter - listSize + i).hashCode());
                 } else {
                     mul = 1;
                 }
@@ -265,7 +310,7 @@ public class BPSSList {
                 Optional<EventSelectionResult> res = BPFilter.bProgram.getEventSelectionStrategy().select(cur, possibleEvents);
                 if (res.isPresent()) {
                     EventSelectionResult esr = (EventSelectionResult) res.get();
-                    if (esr.getEvent().equals(BPFilter.eventList.get(BPFilter.programStepCounter + j))) {
+                    if (esr.getEvent().equals(BPFilter.observationList.get(BPFilter.programStepCounter + j))) {
                         fitness.set(j, fitness.get(j) + 1.0);
                     }
                     try {
@@ -303,7 +348,7 @@ public class BPSSList {
                 Optional<EventSelectionResult> res = BPFilter.bProgram.getEventSelectionStrategy().select(cur, possibleEvents);
                 if (res.isPresent()) {
                     EventSelectionResult esr = (EventSelectionResult) res.get();
-                    if (esr.getEvent().equals(BPFilter.eventList.get(BPFilter.programStepCounter + j))) {
+                    if (esr.getEvent().equals(BPFilter.observationList.get(BPFilter.programStepCounter + j))) {
                         fitness.set(j, fitness.get(j) + 1.0);
                     }
                     try {
