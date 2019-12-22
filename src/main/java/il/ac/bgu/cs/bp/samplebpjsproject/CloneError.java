@@ -20,7 +20,7 @@ public class CloneError {
     public static void main(final String[] args) throws Exception {
         ExecutorService executorService = ExecutorServiceMaker.makeWithName("BProgramRunner-" + 1);
         SimpleEventSelectionStrategyFilter ess = new SimpleEventSelectionStrategyFilter(new SimpleEventSelectionStrategy(1));
-        BProgram externalBProgram = new ResourceBProgram("localization_clone_test.js", ess);
+        BProgram externalBProgram = new ResourceBProgram("localization.js", ess);
         BProgramSyncSnapshot bpss = externalBProgram.setup();
         bpss = bpss.start(executorService);
         for (int i=0; i < 100; i++){

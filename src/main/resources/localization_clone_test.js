@@ -1,4 +1,3 @@
-importPackage(java.util);
 const width = 3;
 const height = 2;
 const numOfSteps = 100;
@@ -20,7 +19,7 @@ const map =
 const walls = generateWalls();
 
 function generateInnerWalls(){
-    let ans = [];
+    var ans = [];
     for (var i = 0; i < map.length; i++) {
         for (var j = 0; j < map[i].length; j++) {
             if (map[i].charAt(j) == "|"){
@@ -37,7 +36,7 @@ function generateInnerWalls(){
 }
 
 function generateWalls(){
-    let ans = generateInnerWalls();
+    var ans = generateInnerWalls();
     for (var i = 0; i < width; i++) {
         ans.push({orientation:"N", x: i, y: 0});
         ans.push({orientation:"S", x: i, y: height-1});
@@ -49,8 +48,16 @@ function generateWalls(){
     return ans;
 }
 
+function randomG(v){
+    var r = 0;
+    for(var i = v; i > 0; i --){
+        r += bp.random.nextFloat();
+    }
+    return r / v;
+}
+
 function nextGaussian() {
-    let initial_val = new Random().nextGaussian() * observation_std;
+    var initial_val = randomG(4) * observation_std;
     return Math.round(initial_val);
 }
 
@@ -68,8 +75,8 @@ function nextState(state, move) {
 }
 
 function nextObservation(state) {
-    let dx = nextGaussian();
-    let dy = nextGaussian();
+    var dx = nextGaussian();
+    var dy = nextGaussian();
     return bp.Event("Observation", {x:state.x+dx, y:state.y+dy});
 }
 
@@ -85,9 +92,9 @@ bp.registerBThread("Interleave", function() {
 });
 
 bp.registerBThread("State", function() {
-    let s = bp.sync( {request:bp.Event("State", {x:new Random().nextInt(width), y:new Random().nextInt(height)})});
+    var s = bp.sync( {request:bp.Event("State", {x:bp.random.nextInt(width), y:bp.random.nextInt(height)})});
     while (true){
-        let m = bp.sync( {waitFor:Moves});
+        var m = bp.sync( {waitFor:Moves});
         s = nextState(s, m);
         bp.sync( {request:s});
     }
@@ -95,7 +102,7 @@ bp.registerBThread("State", function() {
 
 bp.registerBThread("Observation", function() {
     while (true){
-        let s = bp.sync( {waitFor:States}).data;
+        var s = bp.sync( {waitFor:States}).data;
         o = nextObservation(s);
         bp.sync( {request:o});
     }
@@ -112,8 +119,8 @@ bp.registerBThread("Move", function() {
 
 bp.registerBThread("WallsFilter", function() {
     while (true){
-        let s = bp.sync( {waitFor:States});
-        let illegalMoves = walls.filter(function(wall) {
+        var s = bp.sync( {waitFor:States});
+        var illegalMoves = walls.filter(function(wall) {
             return wall.x == s.data.x && wall.y == s.data.y;
         }).map(function (wall) {
             return bp.Event("Move", {orientation:wall.orientation})

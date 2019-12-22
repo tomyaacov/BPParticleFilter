@@ -3,6 +3,7 @@ package il.ac.bgu.cs.bp.samplebpjsproject;
 import il.ac.bgu.cs.bp.bpjs.internal.ExecutorServiceMaker;
 import il.ac.bgu.cs.bp.bpjs.model.*;
 import il.ac.bgu.cs.bp.bpjs.model.eventselection.SimpleEventSelectionStrategy;
+import org.mozilla.javascript.NativeObject;
 
 import java.io.File;
 import java.io.IOException;
@@ -179,11 +180,23 @@ public class ParticleFilter {
     public BEvent predict(){
         OptionalDouble mean_x = particles
                 .stream()
-                .mapToDouble(p -> 1.0)//TODO: change
+                .mapToDouble(p -> {
+                    Object state_x = ((NativeObject)p.getLastState().getData()).get("x");
+                    if(state_x instanceof Integer){
+                        state_x = ((Integer)state_x).doubleValue();
+                    }
+                    return (Double)state_x;
+                })
                 .average();
         OptionalDouble mean_y = particles
                 .stream()
-                .mapToDouble(p -> 1.0)//TODO: change
+                .mapToDouble(p -> {
+                    Object state_y = ((NativeObject)p.getLastState().getData()).get("y");
+                    if(state_y instanceof Integer){
+                        state_y = ((Integer)state_y).doubleValue();
+                    }
+                    return (Double)state_y;
+                })
                 .average();
         return new BEvent("State");//TODO: change
     }
@@ -281,7 +294,7 @@ public class ParticleFilter {
         BPFilter.bpssListSize = 5;
         BPFilter.populationSize = 10;
         BPFilter.mutationProbability = 0.1;
-        BPFilter.aResourceName = "localization.js";
+        BPFilter.aResourceName = "localization_clone_test.js";
         BPFilter.evolutionResolution = 1;
         BPFilter.fitnessNumOfIterations = 5;
         BPFilter.realityBased = true;
