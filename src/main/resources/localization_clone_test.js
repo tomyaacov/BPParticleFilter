@@ -1,6 +1,6 @@
 importPackage(java.util);
-const width = 20;
-const height = 20;
+const width = 3;
+const height = 2;
 const numOfSteps = 100;
 const observation_std = 2;
 
@@ -11,45 +11,9 @@ const Moves = bp.EventSet("Moves", function(evt) {return evt.name == "Move"});
 
 const map =
     [
-        "   |       |           |       |       ",
-        "                                       ",
-        "   |       |           |       |       ",
-        "    -                   -              ",
-        "   |       |           |       |       ",
-        "        - -                 - -        ",
-        "           |                   |       ",
-        "                                       ",
-        "           |                   |       ",
-        "- - -               - - -              ",
-        "                                       ",
-        "                                       ",
-        "       |                   |           ",
-        "        - - - -             - - - -    ",
-        "       |                   |           ",
-        "                                       ",
-        "       |                   |           ",
-        "                                       ",
-        "               |                   |   ",
-        "                                       ",
-        "   |       |           |       |       ",
-        "                                       ",
-        "   |       |           |       |       ",
-        "    -                   -              ",
-        "   |       |           |       |       ",
-        "        - -                 - -        ",
-        "           |                   |       ",
-        "                                       ",
-        "           |                   |       ",
-        "- - -               - - -              ",
-        "                                       ",
-        "                                       ",
-        "       |                   |           ",
-        "        - - - -             - - - -    ",
-        "       |                   |           ",
-        "                                       ",
-        "       |                   |           ",
-        "                                       ",
-        "               |                   |   ",
+        "   | ",
+        "     ",
+        "   | "
 
     ];
 
