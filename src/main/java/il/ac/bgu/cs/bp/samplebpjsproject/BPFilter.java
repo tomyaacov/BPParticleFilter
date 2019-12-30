@@ -42,9 +42,13 @@ public class BPFilter {
 
     public static List<BEvent> observationList;
 
-    public static List<BEvent> stateList = new LinkedList<>();
+    public static List<LocalizationState> stateList = new LinkedList<>();
 
-    public static List<BEvent> stateEstimatedList = new LinkedList<>();
+    public static List<LocalizationState> meanAfterResamplingEstimation = new LinkedList<>();
+
+    public static List<LocalizationState> meanBeforeResamplingEstimation = new LinkedList<>();
+
+    public static List<LocalizationState> bestParticleEstimation = new LinkedList<>();
 
     public static List<Double> meanFitness = new LinkedList<>();
 
@@ -57,6 +61,12 @@ public class BPFilter {
     public static List<Double> meanPopulationAccuracy = new LinkedList<>();
 
     public static List<Double> estimationAccuracy;
+
+    public static List<Double> meanAfterResamplingEstimationAccDis;
+
+    public static List<Double> meanBeforeResamplingEstimationAccDis;
+
+    public static List<Double> bestParticleEstimationAccDis;
 
     public static List<Double> estimationBtAccuracy;
 
@@ -102,7 +112,9 @@ public class BPFilter {
         minFitness = new LinkedList<>();
         maxFitness = new LinkedList<>();
         meanPopulationAccuracy = new LinkedList<>();
-        stateEstimatedList = new LinkedList<>();
+        meanAfterResamplingEstimation = new LinkedList<>();
+        meanBeforeResamplingEstimation = new LinkedList<>();
+        bestParticleEstimation = new LinkedList<>();
         statisticalModel = new HashMap<>();
         particleAnalysisData = "";
     }

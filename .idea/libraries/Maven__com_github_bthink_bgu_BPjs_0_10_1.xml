@@ -3,9 +3,7 @@
     <CLASSES>
       <root url="jar://$MAVEN_REPOSITORY$/com/github/bthink-bgu/BPjs/0.10.1/BPjs-0.10.1.jar!/" />
     </CLASSES>
-    <JAVADOC>
-      <root url="jar://$MAVEN_REPOSITORY$/com/github/bthink-bgu/BPjs/0.10.1/BPjs-0.10.1-javadoc.jar!/" />
-    </JAVADOC>
+    <JAVADOC />
     <SOURCES>
       <root url="jar://$MAVEN_REPOSITORY$/com/github/bthink-bgu/BPjs/0.10.1/BPjs-0.10.1-sources.jar!/" />
     </SOURCES>

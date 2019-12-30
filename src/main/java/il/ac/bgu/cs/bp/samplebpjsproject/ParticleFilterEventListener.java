@@ -13,7 +13,7 @@ import java.util.List;
 public class ParticleFilterEventListener implements BProgramRunnerListener {
 
     public List<BEvent> observationList;
-    public List<BEvent> stateList;
+    public List<LocalizationState> stateList;
 
     public ParticleFilterEventListener() {
         this.stateList = new LinkedList<>();
@@ -63,7 +63,7 @@ public class ParticleFilterEventListener implements BProgramRunnerListener {
     @Override
     public void eventSelected(BProgram bProgram, BEvent bEvent) {
         if (bEvent.name.equals("State")){
-            stateList.add(bEvent);
+            stateList.add(new LocalizationState(bEvent));
         }
         if (bEvent.name.equals("Observation")) {
             observationList.add(bEvent);

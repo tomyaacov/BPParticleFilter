@@ -245,7 +245,6 @@ public class BPSSList {
 //        }
         BEvent observation = BPFilter.observationList.get(BPFilter.programStepCounter-1);
         BEvent state = this.getLastState();
-        System.out.println(state.getData());
         Object state_x = ((NativeObject)state.getData()).get("x");
         Object state_y = ((NativeObject)state.getData()).get("y");
         Object observation_x = ((NativeObject)observation.getData()).get("x");
@@ -422,7 +421,7 @@ public class BPSSList {
 
     @Override
     public String toString() {
-        return eventArrayList.toString();
+        return new LocalizationState(getLastState()).toString() + "p=" +String.valueOf(probability);
     }
 
 }
