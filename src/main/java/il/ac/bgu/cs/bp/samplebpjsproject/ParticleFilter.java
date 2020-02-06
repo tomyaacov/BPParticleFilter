@@ -125,6 +125,7 @@ public class ParticleFilter {
 
     public BPSSList newParticle (){
         BProgram bProgram = new ResourceBProgram(BPFilter.aResourceName);
+        bProgram.putInGlobalScope("map", BPFilter.map);
         BProgramSyncSnapshot initBProgramSyncSnapshot = bProgram.setup();
         BPSSList instance = new BPSSList(BPFilter.bpssListSize);
         try {
@@ -321,7 +322,7 @@ public class ParticleFilter {
     public static void main(final String[] args) throws Exception {
         BPFilter bpFilter = new BPFilter();
         BPFilter.bpssListSize = 5;
-        BPFilter.populationSize = 200;
+        BPFilter.populationSize = 300;
         BPFilter.mutationProbability = 0.1;
         BPFilter.aResourceName = "localization.js";
         BPFilter.evolutionResolution = 1;
@@ -338,6 +339,10 @@ public class ParticleFilter {
         boolean r = file.mkdir();
 
         Files.write(Paths.get(name + File.separator + "parameters.txt"), bpFilter.toString().getBytes());
+
+        Random rand = new Random(1);
+
+        BPFilter.generateMap(rand);
 
         int rounds = 5;
         for (int i=0; i < rounds; i++){

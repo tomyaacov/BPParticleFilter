@@ -1,129 +1,24 @@
 importPackage(java.util);
-const width = 50;
-const height = 50;
-const numOfSteps = 100;
+const width = 100;
+const height = 100;
+const numOfSteps = 80;
 const observation_std = 2;
 
 const Observations = bp.EventSet("Observations", function(evt) {return evt.name == "Observation"});
 const States = bp.EventSet("States", function(evt) {return evt.name == "State"});
 const Moves = bp.EventSet("Moves", function(evt) {return evt.name == "Move"});
 
-
-const map =
-    [
-        "   |       |           |       |           |       |           |       |           |       |       ",
-        "                                                                                                   ",
-        "   |       |           |       |           |       |           |       |           |       |       ",
-        "    -                   -                   -                   -                   -              ",
-        "   |       |           |       |           |       |           |       |           |       |       ",
-        "        - -                 - -                 - -                 - -                 - -        ",
-        "           |                   |                   |                   |                   |       ",
-        "                                                                                                   ",
-        "           |                   |                   |                   |                   |       ",
-        "- - -               - - -               - - -               - - -               - - -              ",
-        "                                                                                                   ",
-        "                                                                                                   ",
-        "       |                   |                   |                   |                   |           ",
-        "        - - - -             - - - -             - - - -             - - - -             - - - -    ",
-        "       |                   |                   |                   |                   |           ",
-        "                                                                                                   ",
-        "       |                   |                   |                   |                   |           ",
-        "                                                                                                   ",
-        "               |                   |                   |                   |                   |   ",
-        "                                                                                                   ",
-        "   |       |           |       |           |       |           |       |           |       |       ",
-        "                                                                                                   ",
-        "   |       |           |       |           |       |           |       |           |       |       ",
-        "    -                   -                   -                   -                   -              ",
-        "   |       |           |       |           |       |           |       |           |       |       ",
-        "        - -                 - -                 - -                 - -                 - -        ",
-        "           |                   |                   |                   |                   |       ",
-        "                                                                                                   ",
-        "           |                   |                   |                   |                   |       ",
-        "- - -               - - -               - - -               - - -               - - -              ",
-        "                                                                                                   ",
-        "                                                                                                   ",
-        "       |                   |                   |                   |                   |           ",
-        "        - - - -             - - - -             - - - -             - - - -             - - - -    ",
-        "       |                   |                   |                   |                   |           ",
-        "                                                                                                   ",
-        "       |                   |                   |                   |                   |           ",
-        "                                                                                                   ",
-        "               |                   |                   |                   |                   |   ",
-        "    -                   -                   -                   -                   -              ",
-        "   |       |           |       |           |       |           |       |           |       |       ",
-        "                                                                                                   ",
-        "   |       |           |       |           |       |           |       |           |       |       ",
-        "    -                   -                   -                   -                   -              ",
-        "   |       |           |       |           |       |           |       |           |       |       ",
-        "        - -                 - -                 - -                 - -                 - -        ",
-        "           |                   |                   |                   |                   |       ",
-        "                                                                                                   ",
-        "           |                   |                   |                   |                   |       ",
-        "- - -               - - -               - - -               - - -               - - -              ",
-        "                                                                                                   ",
-        "                                                                                                   ",
-        "       |                   |                   |                   |                   |           ",
-        "        - - - -             - - - -             - - - -             - - - -             - - - -    ",
-        "       |                   |                   |                   |                   |           ",
-        "                                                                                                   ",
-        "       |                   |                   |                   |                   |           ",
-        "                                                                                                   ",
-        "               |                   |                   |                   |                   |   ",
-        "                                                                                                   ",
-        "   |       |           |       |           |       |           |       |           |       |       ",
-        "                                                                                                   ",
-        "   |       |           |       |           |       |           |       |           |       |       ",
-        "    -                   -                   -                   -                   -              ",
-        "   |       |           |       |           |       |           |       |           |       |       ",
-        "        - -                 - -                 - -                 - -                 - -        ",
-        "           |                   |                   |                   |                   |       ",
-        "                                                                                                   ",
-        "           |                   |                   |                   |                   |       ",
-        "- - -               - - -               - - -               - - -               - - -              ",
-        "                                                                                                   ",
-        "                                                                                                   ",
-        "       |                   |                   |                   |                   |           ",
-        "        - - - -             - - - -             - - - -             - - - -             - - - -    ",
-        "       |                   |                   |                   |                   |           ",
-        "                                                                                                   ",
-        "       |                   |                   |                   |                   |           ",
-        "                                                                                                   ",
-        "               |                   |                   |                   |                   |   ",
-        "- - -               - - -               - - -               - - -               - - -              ",
-        "   |       |           |       |           |       |           |       |           |       |       ",
-        "                                                                                                   ",
-        "   |       |           |       |           |       |           |       |           |       |       ",
-        "    -                   -                   -                   -                   -              ",
-        "   |       |           |       |           |       |           |       |           |       |       ",
-        "        - -                 - -                 - -                 - -                 - -        ",
-        "           |                   |                   |                   |                   |       ",
-        "                                                                                                   ",
-        "           |                   |                   |                   |                   |       ",
-        "- - -               - - -               - - -               - - -               - - -              ",
-        "                                                                                                   ",
-        "                                                                                                   ",
-        "       |                   |                   |                   |                   |           ",
-        "        - - - -             - - - -             - - - -             - - - -             - - - -    ",
-        "       |                   |                   |                   |                   |           ",
-        "                                                                                                   ",
-        "       |                   |                   |                   |                   |           ",
-        "                                                                                                   ",
-        "               |                   |                   |                   |                   |   "
-
-    ];
-
 const walls = generateWalls();
 
 function generateInnerWalls(){
     var ans = [];
     for (var i = 0; i < map.length; i++) {
-        for (var j = 0; j < map[i].length; j++) {
-            if (map[i].charAt(j) == "|"){
+        for (var j = 0; j < map[i].length(); j++) {
+            if (String.fromCharCode(map[i].charAt(j)) === "|"){
                 ans.push({orientation:"E", x: (j-1)/2, y: i/2});
                 ans.push({orientation:"W", x: (j+1)/2, y: i/2});
             }
-            if (map[i].charAt(j) == "-"){
+            if (String.fromCharCode(map[i].charAt(j)) === "-"){
                 ans.push({orientation:"S", x: j/2, y: (i-1)/2});
                 ans.push({orientation:"N", x: j/2, y: (i+1)/2});
             }

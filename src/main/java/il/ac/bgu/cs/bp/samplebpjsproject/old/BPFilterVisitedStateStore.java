@@ -58,32 +58,32 @@ public class BPFilterVisitedStateStore implements VisitedStateStore, Serializabl
     }
 
 
-//    private static final class Snapshot {
-//        final BProgramSyncSnapshot bProgramSyncSnapshot;
-//        private final int hashCode;
-//
-//        Snapshot(BProgramSyncSnapshot bpss) {
-//            this.bProgramSyncSnapshot = bpss;
-//            this.hashCode = this.bProgramSyncSnapshot.hashCode();
-//        }
-//
-//        public int hashCode() {
-//            return this.hashCode;
-//        }
-//
-//        public boolean equals(Object obj) {
-//            if (this == obj) {
-//                return true;
-//            } else if (obj == null) {
-//                return false;
-//            } else if (this.getClass() != obj.getClass()) {
-//                return false;
-//            } else {
-//                BPFilterVisitedStateStore.Snapshot other = (BPFilterVisitedStateStore.Snapshot)obj;
-//                return this.hashCode == other.hashCode ;
-//            }
-//        }
-//    }
+    private static final class Snapshot {
+        final BProgramSyncSnapshot bProgramSyncSnapshot;
+        private final int hashCode;
+
+        Snapshot(BProgramSyncSnapshot bpss) {
+            this.bProgramSyncSnapshot = bpss;
+            this.hashCode = this.bProgramSyncSnapshot.hashCode();
+        }
+
+        public int hashCode() {
+            return this.hashCode;
+        }
+
+        public boolean equals(Object obj) {
+            if (this == obj) {
+                return true;
+            } else if (obj == null) {
+                return false;
+            } else if (this.getClass() != obj.getClass()) {
+                return false;
+            } else {
+                BPFilterVisitedStateStore.Snapshot other = (BPFilterVisitedStateStore.Snapshot)obj;
+                return this.hashCode == other.hashCode ;
+            }
+        }
+    }
     public static void main(final String[] args) throws Exception {
         String aResourceName = "old/example1.js";
         BProgram program = new ResourceBProgram(aResourceName);

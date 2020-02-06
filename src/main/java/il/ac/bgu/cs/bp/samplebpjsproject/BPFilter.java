@@ -16,6 +16,7 @@ import il.ac.bgu.cs.bp.bpjs.model.eventselection.SimpleEventSelectionStrategy;
 import il.ac.bgu.cs.bp.samplebpjsproject.old.BPFilterVisitedStateStore;
 import il.ac.bgu.cs.bp.samplebpjsproject.old.IDDfsProgressListener;
 
+import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
@@ -94,6 +95,8 @@ public class BPFilter {
 
     public static final AtomicInteger INSTANCE_COUNTER = new AtomicInteger();
 
+    public static String[] map;
+
     public BPFilter(int populationSize, double mutationProbability, int bpssListSize1) {
         populationSize = populationSize;
         mutationProbability = mutationProbability;
@@ -122,6 +125,7 @@ public class BPFilter {
     public static void runBprogram(){
         SimpleEventSelectionStrategyFilter ess = new SimpleEventSelectionStrategyFilter(new SimpleEventSelectionStrategy(seed));
         externalBProgram = new ResourceBProgram(aResourceName, ess);
+        externalBProgram.putInGlobalScope("map", map);
         bProgramRunner = new BProgramRunner(externalBProgram);
         if (debug) {
             bProgramRunner.addListener(new PrintBProgramRunnerListener());
@@ -236,6 +240,26 @@ public class BPFilter {
             }
 
         });
+    }
+
+    public static void generateMap(Random gen){
+        int mapSize = 100*2-1;
+        map = new String[mapSize];
+        Arrays.fill(map, new String(new char[mapSize]).replace("\0", " "));
+        for(int i=0; i < map.length; i++){
+            for (int j=0; j<map.length; j++){
+                if (i%2==0 && j%2==1){
+                    if (gen.nextFloat() < 0.05){
+                        map[i] = map[i].substring(0,j)+'|'+map[i].substring(j+1);
+                    }
+                }
+                if (i%2==1 && j%2==0){
+                    if (gen.nextFloat() < 0.05){
+                        map[i] = map[i].substring(0,j)+'-'+map[i].substring(j+1);
+                    }
+                }
+            }
+        }
     }
 
     public static void runOfflineModelChecking() throws Exception{
